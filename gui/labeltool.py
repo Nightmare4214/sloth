@@ -21,8 +21,8 @@ from sloth.annotations.model import AnnotationTreeView, FrameModelItem, ImageFil
     InterpolateRange
 from sloth import APP_NAME, ORGANIZATION_DOMAIN
 from sloth.utils.bind import bind, compose_noargs
-import Main
-from annotations.container import AnnotationContainerFactory
+import sloth.Main as Main
+from sloth.annotations.container import AnnotationContainerFactory
 
 GUIDIR = os.path.join(os.path.dirname(__file__))
 
