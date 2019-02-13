@@ -11,8 +11,8 @@ from sloth.annotations.model import AnnotationModelItem
 from sloth.gui.floatinglayout import FloatingLayout
 from sloth.gui.utils import MyVBoxLayout
 from sloth.utils.bind import bind
-import conf.default_config as cf
-import Main
+import sloth.conf.default_config as cf
+import sloth.Main as Main
 
 LOG = logging.getLogger(__name__)
 
