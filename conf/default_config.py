@@ -1,3 +1,5 @@
+import json
+
 # This is sloth's default configuration.
 #
 # The configuration file is a simple python module with module-level
@@ -33,53 +35,63 @@
 #                    class.
 #
 #   - 'text' : (optional) A label for the item's GUI button.
-LABELS = (
-    {
-        'attributes': {
-            'class':      'Face',
-        },
-        'inserter': 'sloth.items.RectItemInserter',
-        'item':     'sloth.items.RectItem',
-        'hotkey':   'f',
-        'text':     'Face',
-    },
-{
-        'attributes': {
-            'class':      'Face11',
-        },
-        'inserter': 'sloth.items.RectItemInserter',
-        'item':     'sloth.items.RectItem',
-        'hotkey':   'f',
-        'text':     'Face11',
-    },
-    {
-        'attributes': {
-            'class':      'rect',
-        },
-        'inserter': 'sloth.items.RectItemInserter',
-        'item':     'sloth.items.RectItem',
-        'hotkey':   'r',
-        'text':     'Rectangle',
-    },
-    {
-        'attributes': {
-            'class':    'yiwu',
-        },
-        'inserter': 'sloth.items.PointItemInserter',
-        'item':     'sloth.items.PointItem',
-        'hotkey':   'p',
-        'text':     'yiwu',
-    },
-    {
-        'attributes': {
-            'class':    'polygon',
-        },
-        'inserter': 'sloth.items.PolygonItemInserter',
-        'item':     'sloth.items.PolygonItem',
-        'hotkey':   'o',
-        'text':     'Polygon',
-    },
-)
+label_path = r'../bin/config.json'
+temp = []
+try:
+    with open(label_path, 'r') as f:
+        temp = json.load(f)
+except:
+    temp = []
+    print('error')
+finally:
+    LABELS = temp
+# LABELS = [
+#     {
+#         'attributes': {
+#             'class': 'Face',
+#         },
+#         'inserter': 'sloth.items.RectItemInserter',
+#         'item': 'sloth.items.RectItem',
+#         'hotkey': 'f',
+#         'text': 'Face',
+#     },
+#     {
+#         'attributes': {
+#             'class': 'Face11',
+#         },
+#         'inserter': 'sloth.items.RectItemInserter',
+#         'item': 'sloth.items.RectItem',
+#         'hotkey': 'f',
+#         'text': 'Face11',
+#     },
+#     {
+#         'attributes': {
+#             'class': 'rect',
+#         },
+#         'inserter': 'sloth.items.RectItemInserter',
+#         'item': 'sloth.items.RectItem',
+#         'hotkey': 'r',
+#         'text': 'Rectangle',
+#     },
+#     {
+#         'attributes': {
+#             'class': 'yiwu',
+#         },
+#         'inserter': 'sloth.items.PointItemInserter',
+#         'item': 'sloth.items.PointItem',
+#         'hotkey': 'p',
+#         'text': 'yiwu',
+#     },
+#     {
+#         'attributes': {
+#             'class': 'polygon',
+#         },
+#         'inserter': 'sloth.items.PolygonItemInserter',
+#         'item': 'sloth.items.PolygonItem',
+#         'hotkey': 'o',
+#         'text': 'Polygon',
+#     }
+# ]
 
 # HOTKEYS
 #
@@ -90,20 +102,20 @@ LABELS = (
 # third entry -- if present -- is expected to be a string describing the 
 # action.
 HOTKEYS = (
-    ('Space',     [lambda lt: lt.currentImage().confirmAll(),
-                   lambda lt: lt.currentImage().setUnlabeled(False),
-                   lambda lt: lt.gotoNext()
-                  ],                                         'Mark image as labeled/confirmed and go to next'),
-    ('Backspace', lambda lt: lt.gotoPrevious(),              'Previous image/frame'),
-    ('PgDown',    lambda lt: lt.gotoNext(),                  'Next image/frame'),
-    ('PgUp',      lambda lt: lt.gotoPrevious(),              'Previous image/frame'),
-    ('Tab',       lambda lt: lt.selectNextAnnotation(),      'Select next annotation'),
-    ('Shift+Tab', lambda lt: lt.selectPreviousAnnotation(),  'Select previous annotation'),
-    ('Ctrl+f',    lambda lt: lt.view().fitInView(),          'Fit current image/frame into window'),
-    ('Del',       lambda lt: lt.deleteSelectedAnnotations(), 'Delete selected annotations'),
-    ('ESC',       lambda lt: lt.exitInsertMode(),            'Exit insert mode'),
-    ('Shift+l',   lambda lt: lt.currentImage().setUnlabeled(False), 'Mark current image as labeled'),
-    ('Shift+c',   lambda lt: lt.currentImage().confirmAll(), 'Mark all annotations in image as confirmed'),
+    ('Space', [lambda lt: lt.currentImage().confirmAll(),
+               lambda lt: lt.currentImage().setUnlabeled(False),
+               lambda lt: lt.gotoNext()
+               ], 'Mark image as labeled/confirmed and go to next'),
+    ('Backspace', lambda lt: lt.gotoPrevious(), 'Previous image/frame'),
+    ('PgDown', lambda lt: lt.gotoNext(), 'Next image/frame'),
+    ('PgUp', lambda lt: lt.gotoPrevious(), 'Previous image/frame'),
+    ('Tab', lambda lt: lt.selectNextAnnotation(), 'Select next annotation'),
+    ('Shift+Tab', lambda lt: lt.selectPreviousAnnotation(), 'Select previous annotation'),
+    ('Ctrl+f', lambda lt: lt.view().fitInView(), 'Fit current image/frame into window'),
+    ('Del', lambda lt: lt.deleteSelectedAnnotations(), 'Delete selected annotations'),
+    ('ESC', lambda lt: lt.exitInsertMode(), 'Exit insert mode'),
+    ('Shift+l', lambda lt: lt.currentImage().setUnlabeled(False), 'Mark current image as labeled'),
+    ('Shift+c', lambda lt: lt.currentImage().confirmAll(), 'Mark all annotations in image as confirmed'),
 )
 
 # CONTAINERS
@@ -114,10 +126,10 @@ HOTKEYS = (
 # class implementing the sloth container interface, or a module path pointing
 # to such a class.
 CONTAINERS = (
-    ('*.json',       'sloth.annotations.container.JsonContainer'),
-    ('*.msgpack',    'sloth.annotations.container.MsgpackContainer'),
-    ('*.yaml',       'sloth.annotations.container.YamlContainer'),
-    ('*.pickle',     'sloth.annotations.container.PickleContainer'),
+    ('*.json', 'sloth.annotations.container.JsonContainer'),
+    ('*.msgpack', 'sloth.annotations.container.MsgpackContainer'),
+    ('*.yaml', 'sloth.annotations.container.YamlContainer'),
+    ('*.pickle', 'sloth.annotations.container.PickleContainer'),
     ('*.sloth-init', 'sloth.annotations.container.FileNameListContainer'),
 )
 
@@ -128,5 +140,3 @@ CONTAINERS = (
 # as string.
 PLUGINS = (
 )
-
-
