@@ -1,0 +1,47 @@
+[
+    {
+        "attributes": {
+            "class": "Face"
+        }, 
+        "inserter": "sloth.items.RectItemInserter", 
+        "item": "sloth.items.RectItem", 
+        "hotkey": "f", 
+        "text": "Face"
+    }, 
+    {
+        "attributes": {
+            "class": "Face11"
+        }, 
+        "inserter": "sloth.items.RectItemInserter", 
+        "item": "sloth.items.RectItem", 
+        "hotkey": "f", 
+        "text": "Face11"
+    }, 
+    {
+        "attributes": {
+            "class": "rect"
+        }, 
+        "inserter": "sloth.items.RectItemInserter", 
+        "item": "sloth.items.RectItem", 
+        "hotkey": "r", 
+        "text": "Rectangle"
+    }, 
+    {
+        "attributes": {
+            "class": "yiwu"
+        }, 
+        "inserter": "sloth.items.PointItemInserter", 
+        "item": "sloth.items.PointItem", 
+        "hotkey": "p", 
+        "text": "yiwu"
+    }, 
+    {
+        "attributes": {
+            "class": "polygon"
+        }, 
+        "inserter": "sloth.items.PolygonItemInserter", 
+        "item": "sloth.items.PolygonItem", 
+        "hotkey": "o", 
+        "text": "Polygon"
+    }
+]
