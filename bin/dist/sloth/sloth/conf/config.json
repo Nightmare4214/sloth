@@ -10,7 +10,7 @@
     }, 
     {
         "attributes": {
-            "class": "Face11"
+            "class": "Face12"
         }, 
         "inserter": "sloth.items.RectItemInserter", 
         "item": "sloth.items.RectItem", 

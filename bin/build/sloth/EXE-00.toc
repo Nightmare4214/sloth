@@ -1,5 +1,5 @@
 ('E:\\sloth\\bin\\build\\sloth\\sloth.exe',
- False,
+ True,
  False,
  True,
  None,
@@ -42,7 +42,7 @@
  [],
  False,
  False,
- 1550130030,
- [('runw.exe',
-   'd:\\anaconda3\\lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit\\runw.exe',
+ 1550131429,
+ [('run.exe',
+   'd:\\anaconda3\\lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit\\run.exe',
    'EXECUTABLE')])

@@ -1,4 +1,4 @@
-import json
+import json, os
 
 # This is sloth's default configuration.
 #
@@ -35,14 +35,14 @@ import json
 #                    class.
 #
 #   - 'text' : (optional) A label for the item's GUI button.
-label_path = r'../bin/config.json'
+label_path = os.path.join(os.path.dirname(__file__), 'config.json')
 temp = []
 try:
     with open(label_path, 'r') as f:
         temp = json.load(f)
-except:
+except Exception as e:
     temp = []
-    print('error')
+    print(e)
 finally:
     LABELS = temp
 # LABELS = [
