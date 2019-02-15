@@ -459,68 +459,6 @@ class PropertyEditor(QWidget):
         dir_path = QFileDialog.getExistingDirectory(self)
         Main.write_txt(dir_path, {defect}, 'defect')
 
-    # def get_name(self, temp_json_path='faQ.json'):
-    #     while os.path.exists(temp_json_path):
-    #         temp_json_path = os.path.splitext(temp_json_path)[0] + '(1)' + '.json'
-    #     return temp_json_path
-    #
-    # def add_all_json(self, key_word):
-    #     temp_json = []
-    #     filename_set = set()
-    #
-    #     temp_json_path = os.path.abspath(self.get_name())
-    #     print(temp_json_path)
-    #     self.labeltool.saveAnnotations(temp_json_path)
-    #     with open(temp_json_path, 'r') as f:
-    #         temp = json.load(f)
-    #     for i in range(len(temp)):
-    #         current_json = temp[i]
-    #         if 'filename' in current_json:
-    #             filename = os.path.abspath(os.path.join('.', current_json['filename']))
-    #             filename = os.path.relpath(filename, '.')
-    #             if filename in filename_set:
-    #                 continue
-    #             else:
-    #                 filename_set.add(filename)
-    #             current_json['filename'] = filename
-    #             temp_json.append(current_json)
-    #     os.remove(temp_json_path)
-    #
-    #     json_path = QFileDialog.getExistingDirectory(self)
-    #     for root, dirs, files in os.walk(json_path):
-    #         for file in files:
-    #             if os.path.splitext(file)[-1] == '.json' and os.path.splitext(file)[0].find(key_word) != -1:
-    #                 json_file = os.path.join(root, file)
-    #                 with open(json_file, 'r') as f:
-    #                     temp = json.load(f)
-    #                 for i in range(len(temp)):
-    #                     current_json = temp[i]
-    #                     if 'filename' in current_json:
-    #                         filename = os.path.abspath(os.path.join(root, current_json['filename']))
-    #                         filename = os.path.relpath(filename, '.')
-    #                         if filename in filename_set:
-    #                             continue
-    #                         else:
-    #                             filename_set.add(filename)
-    #                         current_json['filename'] = filename
-    #                         temp_json.append(current_json)
-    #     temp_json_path = self.get_name()
-    #     container = AnnotationContainerFactory(config.CONTAINERS).create(temp_json_path)
-    #     container.save(temp_json, temp_json_path)
-    #
-    #     self.labeltool.loadAnnotations(temp_json_path)
-    #
-    #     os.remove(temp_json_path)
-
-    # def search_file(self):
-    #     key_word = self._key_word.text()
-    #     if key_word is None or key_word == '':
-    #         key_word = self._key_word.placeholderText()
-    #     extension = self._extension.text()
-    #     if extension is None or extension == '':
-    #         extension = self._extension.placeholderText()
-    #     if extension == 'json':
-    #         self.add_all_json(key_word)
     def setFunction(self, func):
         self._search_btn.clicked.connect(func)
 

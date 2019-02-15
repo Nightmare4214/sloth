@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # _*_ coding:utf-8 _*_
+from datetime import datetime
 import json
 import os
 
@@ -41,7 +42,8 @@ def write_txt(json_directory, defect, txt_path):
     directory = os.path.join(json_directory, txt_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
-    with open(os.path.join(directory, '.'.join(defect) + '.txt'), 'w') as f:
+    with open(os.path.join(directory,
+                           '.'.join(defect)+datetime.now().strftime('%Y_%m_%d_%H_%M_%S') + '.txt'), 'w') as f:
         # f.write(str(pictures))
         for picture in pictures:
             f.write(picture + '\n')
