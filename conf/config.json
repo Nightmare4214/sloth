@@ -8,7 +8,7 @@
         "hotkey": "f", 
         "text": "Face"
     }, 
-    {
+    {//测试的中文comment
         "attributes": {
             "class": "中文"
         }, 

@@ -1,4 +1,5 @@
-import json, os
+import json5
+import os
 
 # This is sloth's default configuration.
 #
@@ -39,7 +40,7 @@ label_path = os.path.join(os.path.dirname(__file__), 'config.json')
 temp = []
 try:
     with open(label_path, 'r') as f:
-        temp = json.load(f)
+        temp = json5.load(f)
 except Exception as e:
     temp = []
     print(e)
