@@ -239,6 +239,7 @@ class MainWindow(QMainWindow):
     def openDirectory(self):
         a = self.treeview.currentIndex()
         print('faQ', a.data())
+        print(type(self.treeview))
         open_path = '.'
         try:
             sysstr = platform.system()

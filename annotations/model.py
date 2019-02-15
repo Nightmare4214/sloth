@@ -2,6 +2,7 @@
 The annotationmodel module contains the classes for the AnnotationModel.
 """
 import os.path
+import platform
 import time
 import logging
 import copy
@@ -464,6 +465,9 @@ class ImageFileModelItem(FileModelItem, ImageModelItem):
             self._toload.append(ann)
         self._loaded = False
 
+    def get_filename(self):
+        return self['filename']
+
     def _load(self, index):
         self._toload.remove(self._children[index])
         ann = AnnotationModelItem(self._children[index])
@@ -791,7 +795,19 @@ class AnnotationTreeView(QTreeView):
     selectedItemsChanged = pyqtSignal(object)
 
     def openDirectory(self):
-        print('faQ')
+        a = self.currentIndex()
+        print('tree_view_faQ', a.data())
+        open_path = '.'
+        try:
+            sysstr = platform.system()
+            if sysstr == "Windows":
+                os.system('explorer ' + open_path)
+            elif sysstr == "Linux":
+                os.system('nautilus ' + open_path)
+            else:
+                print("Other System tasks")
+        except Exception as e:
+            print(e)
 
     def showContextMenu(self):
         self.contextMenu.exec_(QCursor.pos())
@@ -809,7 +825,7 @@ class AnnotationTreeView(QTreeView):
         self.actionA = self.contextMenu.addAction('打开文件所在文件夹')
         self.actionA.triggered.connect(self.openDirectory)
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        # self.customContextMenuRequested.connect(self.showContextMenu)
+        self.customContextMenuRequested.connect(self.showContextMenu)
 
         self.setUniformRowHeights(True)
         self.setSelectionMode(QTreeView.ExtendedSelection)
