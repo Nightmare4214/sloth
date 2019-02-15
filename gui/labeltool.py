@@ -371,6 +371,54 @@ class MainWindow(QMainWindow):
             temp_json_path = os.path.splitext(temp_json_path)[0] + '(1)' + '.json'
         return temp_json_path
 
+    def add_json(self):
+        temp_json = []
+        filename_set = set()
+        path = '.'
+        temp_json_path = self.get_name()
+        self.labeltool.saveAnnotations(temp_json_path)
+        with open(temp_json_path, 'r') as f:
+            temp = json.load(f)
+        for i in range(len(temp)):
+            current_json = temp[i]
+            if 'filename' in current_json:
+                filename = os.path.abspath(os.path.join('.', current_json['filename']))
+                filename = os.path.relpath(filename, '.')
+                if filename in filename_set:
+                    continue
+                else:
+                    filename_set.add(filename)
+                current_json['filename'] = filename
+                temp_json.append(current_json)
+        os.remove(temp_json_path)
+        json_types = ['*.json']
+        format_str = ' '.join(json_types)
+        fnames = QFileDialog.getOpenFileNames(self, "%s - Add json File" % APP_NAME, path,
+                                              "json files (%s)" % (format_str,))
+        for json_file in fnames:
+            with open(json_file, 'r') as f:
+                temp = json.load(f)
+            for i in range(len(temp)):
+                current_json = temp[i]
+                if 'filename' in current_json and \
+                        set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
+                    root = os.path.dirname(json_file)
+                    filename = os.path.abspath(os.path.join(root, current_json['filename']))
+                    filename = os.path.relpath(filename, '.')
+                    if filename in filename_set:
+                        continue
+                    else:
+                        filename_set.add(filename)
+                    current_json['filename'] = filename
+                    temp_json.append(current_json)
+        temp_json_path = self.get_name()
+        container = AnnotationContainerFactory(config.CONTAINERS).create(temp_json_path)
+        container.save(temp_json, temp_json_path)
+
+        self.labeltool.loadAnnotations(temp_json_path)
+
+        os.remove(temp_json_path)
+
     def add_all_json(self, key_word=None):
         temp_json = []
         filename_set = set()
@@ -438,6 +486,7 @@ class MainWindow(QMainWindow):
         ## Navigation
         self.ui.action_Add_Image.triggered.connect(self.addMediaFile)
         self.ui.action_Add_All_Image.triggered.connect(self.addMediaFile1)
+        self.ui.actionAdd_Json.triggered.connect(self.add_json)
         self.ui.actionAdd_All_Json.triggered.connect(self.add_all_json)
 
         self.ui.actionNext.triggered.connect(self.labeltool.gotoNext)
