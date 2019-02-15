@@ -3,6 +3,7 @@ import json
 import logging, os
 import functools
 import fnmatch
+import platform
 
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtGui import QMainWindow, QSizePolicy, QWidget, QVBoxLayout, QAction, \
@@ -238,6 +239,17 @@ class MainWindow(QMainWindow):
     def openDirectory(self):
         a = self.treeview.currentIndex()
         print('faQ', a.data())
+        open_path = '.'
+        try:
+            sysstr = platform.system()
+            if sysstr == "Windows":
+                os.system('explorer ' + open_path)
+            elif sysstr == "Linux":
+                os.system('nautilus ' + open_path)
+            else:
+                print("Other System tasks")
+        except Exception as e:
+            print(e)
 
     def search_file(self):
         key_word = self.property_editor.get_key_word()

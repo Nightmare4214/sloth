@@ -10,12 +10,12 @@
     }, 
     {
         "attributes": {
-            "class": "Face12"
+            "class": "中文"
         }, 
         "inserter": "sloth.items.RectItemInserter", 
         "item": "sloth.items.RectItem", 
         "hotkey": "f", 
-        "text": "Face11"
+        "text": "中文"
     }, 
     {
         "attributes": {
