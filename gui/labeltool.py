@@ -238,9 +238,11 @@ class MainWindow(QMainWindow):
 
     def openDirectory(self):
         a = self.treeview.currentIndex()
-        print('faQ', a.data())
-        print(type(self.treeview))
-        open_path = '.'
+        annotations = self.labeltool.annotations()
+        open_path = os.path.dirname(annotations[a.row()]['filename'])
+        print(annotations)
+        print(a.row())
+        print(os.path.abspath(annotations[a.row()]['filename']))
         try:
             sysstr = platform.system()
             if sysstr == "Windows":
@@ -324,6 +326,7 @@ class MainWindow(QMainWindow):
         self.initAnnotationMenu()
 
         self.treeview = AnnotationTreeView()
+        self.treeview.set_openDirectory(self.openDirectory)
         self.treeview.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         self.ui.dockAnnotations.setWidget(self.treeview)
 

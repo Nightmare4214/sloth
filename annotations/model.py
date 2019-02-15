@@ -794,20 +794,12 @@ class AnnotationSortFilterProxyModel(QSortFilterProxyModel):
 class AnnotationTreeView(QTreeView):
     selectedItemsChanged = pyqtSignal(object)
 
-    def openDirectory(self):
-        a = self.currentIndex()
-        print('tree_view_faQ', a.data())
-        open_path = '.'
-        try:
-            sysstr = platform.system()
-            if sysstr == "Windows":
-                os.system('explorer ' + open_path)
-            elif sysstr == "Linux":
-                os.system('nautilus ' + open_path)
-            else:
-                print("Other System tasks")
-        except Exception as e:
-            print(e)
+    def set_openDirectory(self,openDirectory):
+        self.contextMenu = QtGui.QMenu(self)
+        self.actionA = self.contextMenu.addAction('打开文件所在文件夹')
+        self.actionA.triggered.connect(openDirectory)
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.showContextMenu)
 
     def showContextMenu(self):
         self.contextMenu.exec_(QCursor.pos())
@@ -821,18 +813,12 @@ class AnnotationTreeView(QTreeView):
                 QtGui.QMessageBox.warning(None, "treeview select",
                                           str(index.internalPointer().itemData[0]))
         '''
-        self.contextMenu = QtGui.QMenu(self)
-        self.actionA = self.contextMenu.addAction('打开文件所在文件夹')
-        self.actionA.triggered.connect(self.openDirectory)
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.showContextMenu)
 
         self.setUniformRowHeights(True)
         self.setSelectionMode(QTreeView.ExtendedSelection)
         self.setSelectionBehavior(QTreeView.SelectRows)
         self.setAllColumnsShowFocus(True)
         self.setAlternatingRowColors(True)
-        # self.setEditTriggers(QAbstractItemView.SelectedClicked)
         self.setSortingEnabled(True)
         self.setAnimated(True)
         self.expanded.connect(self.onExpanded)
