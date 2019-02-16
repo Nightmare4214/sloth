@@ -1,21 +1,21 @@
 [
     {
         "attributes": {
-            "class": "Face"
+            "class": "Face1"
         }, 
         "inserter": "sloth.items.RectItemInserter", 
         "item": "sloth.items.RectItem", 
         "hotkey": "f", 
-        "text": "Face"
+        "text": "Face1"
     }, 
     {//测试的中文comment
         "attributes": {
-            "class": "中文"
+            "class": "中文1"
         }, 
         "inserter": "sloth.items.RectItemInserter", 
         "item": "sloth.items.RectItem", 
         "hotkey": "f", 
-        "text": "中文"
+        "text": "中文1"
     }, 
     {
         "attributes": {

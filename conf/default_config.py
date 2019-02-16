@@ -1,3 +1,4 @@
+import sys
 import json5
 import os
 
@@ -36,7 +37,14 @@ import os
 #                    class.
 #
 #   - 'text' : (optional) A label for the item's GUI button.
-label_path = os.path.join(os.path.dirname(__file__), 'config.json')
+print('faQ2')
+print('sys.argv[0]', sys.argv[0])
+direct = os.path.dirname(sys.argv[0])
+print('sys_directory', direct)
+with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+    label_path = f.read()
+    print('config_json', label_path)
+# label_path = os.path.join(os.path.dirname(__file__), 'config.json')
 temp = []
 try:
     with open(label_path, 'r') as f:
@@ -46,53 +54,6 @@ except Exception as e:
     print(e)
 finally:
     LABELS = temp
-# LABELS = [
-#     {
-#         'attributes': {
-#             'class': 'Face',
-#         },
-#         'inserter': 'sloth.items.RectItemInserter',
-#         'item': 'sloth.items.RectItem',
-#         'hotkey': 'f',
-#         'text': 'Face',
-#     },
-#     {
-#         'attributes': {
-#             'class': 'Face11',
-#         },
-#         'inserter': 'sloth.items.RectItemInserter',
-#         'item': 'sloth.items.RectItem',
-#         'hotkey': 'f',
-#         'text': 'Face11',
-#     },
-#     {
-#         'attributes': {
-#             'class': 'rect',
-#         },
-#         'inserter': 'sloth.items.RectItemInserter',
-#         'item': 'sloth.items.RectItem',
-#         'hotkey': 'r',
-#         'text': 'Rectangle',
-#     },
-#     {
-#         'attributes': {
-#             'class': 'yiwu',
-#         },
-#         'inserter': 'sloth.items.PointItemInserter',
-#         'item': 'sloth.items.PointItem',
-#         'hotkey': 'p',
-#         'text': 'yiwu',
-#     },
-#     {
-#         'attributes': {
-#             'class': 'polygon',
-#         },
-#         'inserter': 'sloth.items.PolygonItemInserter',
-#         'item': 'sloth.items.PolygonItem',
-#         'hotkey': 'o',
-#         'text': 'Polygon',
-#     }
-# ]
 
 # HOTKEYS
 #

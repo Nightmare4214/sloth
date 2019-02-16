@@ -1,20 +1,34 @@
 #!/usr/bin/env python
+import os
 import sys
 sys.path.append('..')
 from os.path import dirname, realpath
 sys.path.insert(1, dirname(dirname(dirname(realpath(__file__)))))
-from PyQt4.QtGui import QApplication
-from sloth.core.labeltool import LabelTool
+from PyQt4.QtGui import QApplication, QFileDialog
 from sloth import APP_NAME, ORGANIZATION_NAME, ORGANIZATION_DOMAIN
 
+
+app = QApplication(sys.argv)
+app.setOrganizationName(ORGANIZATION_NAME)
+app.setOrganizationDomain(ORGANIZATION_DOMAIN)
+app.setApplicationName(APP_NAME)
+jsons_type = ['*.json']
+format_str = ' '.join(jsons_type)
+fname = QFileDialog.getOpenFileName(QFileDialog(), "%s - Add Media File" % APP_NAME, '.',
+                                    "Json files (%s)" % (format_str,))
+print('select_json',fname)
+print('sys.argv[0]', sys.argv[0])
+direct = os.path.dirname(sys.argv[0])
+with open(os.path.join(direct, 'sloth.txt'), 'w') as f:
+    f.write(fname)
+from sloth.core.labeltool import LabelTool
+
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    app.setOrganizationName(ORGANIZATION_NAME)
-    app.setOrganizationDomain(ORGANIZATION_DOMAIN)
-    app.setApplicationName(APP_NAME)
+    # app = QApplication(sys.argv)
+    # app.setOrganizationName(ORGANIZATION_NAME)
+    # app.setOrganizationDomain(ORGANIZATION_DOMAIN)
+    # app.setApplicationName(APP_NAME)
 
     labeltool = LabelTool()
     labeltool.execute_from_commandline(sys.argv)
-
     sys.exit(app.exec_())
-
