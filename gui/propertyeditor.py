@@ -1,10 +1,15 @@
 import json
+import sys
+
+import json5
 import os
 import time
 import logging
+
+from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import pyqtSignal, QSize, Qt
 from PyQt4.QtGui import QWidget, QGroupBox, QVBoxLayout, QPushButton, QScrollArea, QLineEdit, QDoubleValidator, \
-    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog
+    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor
 from sloth.annotations.container import AnnotationContainerFactory
 from sloth.core.exceptions import ImproperlyConfigured
 from sloth.annotations.model import AnnotationModelItem
@@ -341,6 +346,41 @@ class PropertyEditor(QWidget):
                 for val in vals:
                     h.addValue(val, True)
 
+    def showContextMenu(self, label_class):
+        self._class_context[label_class].exec_(QCursor.pos())
+
+    def remove_item(self, label_class):
+        print(label_class)
+        try:
+            # 删除
+            if label_class in self._class_shortcuts:
+                del self._class_shortcuts[label_class]
+            del self._class_context[label_class]
+            del self._class_action[label_class]
+            self._classbox_layout.removeWidget(self._class_buttons[label_class])
+            self._class_buttons[label_class].deleteLater()
+            self._class_buttons[label_class] = None
+            del self._class_config[label_class]
+            # 写回json
+            direct = os.path.dirname(sys.argv[0])
+            with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+                label_path = f.read()
+            try:
+                with open(label_path, 'r') as f:
+                    temp = json5.load(f)
+                for i, current_json in enumerate(temp):
+                    if current_json['attributes']['class'] == label_class:
+                        temp.remove(current_json)
+                        print(i)
+                        print(temp)
+                        break
+                with open(label_path, 'w') as f:
+                    json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
+            except Exception as e:
+                print(e)
+        except Exception as e:
+            print(e)
+
     def addLabelClass(self, label_config):
         # Check label configuration
         if 'attributes' not in label_config:
@@ -366,6 +406,13 @@ class PropertyEditor(QWidget):
         button.clicked.connect(bind(self.onClassButtonPressed, label_class))
         self._class_buttons[label_class] = button
         self._classbox_layout.addWidget(button)
+
+        # 添加菜单栏
+        self._class_context[label_class] = QtGui.QMenu(self)
+        self._class_action[label_class] = self._class_context[label_class].addAction('删除')
+        self._class_action[label_class].triggered.connect(bind(self.remove_item, label_class))
+        self._class_buttons[label_class].setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self._class_buttons[label_class].customContextMenuRequested.connect(bind(self.showContextMenu, label_class))
 
         # Add hotkey
         if 'hotkey' in label_config:
@@ -476,9 +523,55 @@ class PropertyEditor(QWidget):
             extension = self._extension.placeholderText()
         return extension
 
+    # 返回一个含有权限类型的list
+    def get_attributes_type(self):
+        '''
+        'Rect':('sloth.items.RectItem','sloth.items.RectItemInserter'),
+        'Point':('sloth.items.PointItem','sloth.items.PointItemInserter'),
+        'Polygon':('sloth.items.PolygonItem','sloth.items.PolygonItemInserter')
+        '''
+        return ['Rect', 'Point', 'Polygon']
+
+    def rewrite_json(self, temp_json):
+        direct = os.path.dirname(sys.argv[0])
+        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+            label_path = f.read()
+        try:
+            with open(label_path, 'r') as f:
+                temp = json5.load(f)
+            temp.append(temp_json)
+            with open(label_path, 'w') as f:
+                json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
+        except Exception as e:
+            print(e)
+
+    def add_attributes(self):
+        print('faQ_add_attributes')
+        type_dict = {'Rect': ('sloth.items.RectItem', 'sloth.items.RectItemInserter'),
+                     'Point': ('sloth.items.PointItem', 'sloth.items.PointItemInserter'),
+                     'Polygon': ('sloth.items.PolygonItem', 'sloth.items.PolygonItemInserter')}
+        attributes = {'class': self.attributes_LineEdit.text()}
+        attributes_item, attributes_inserter = type_dict[self.attributes_type.currentText()]
+        attributes_hotkey = self.hotkey.text()
+        attributes_text = self.text_LineEdit.text()
+        temp_json = {'attributes': attributes, 'inserter': attributes_inserter,
+                     'item': attributes_item,
+                     'text': attributes_text}
+        if attributes_hotkey is not None and attributes_hotkey != '':
+            temp_json['hotkey'] = attributes_hotkey
+        print(temp_json)
+        try:
+            self.addLabelClass(temp_json)
+            # @todo 去重还没实现
+            self.rewrite_json(temp_json)
+        except Exception as e:
+            print(e)
+
     def _setupGUI(self):
         self._class_buttons = {}
         self._class_shortcuts = {}
+        self._class_context = {}
+        self._class_action = {}
         self._label_editor = None
 
         # Label class buttons
@@ -514,10 +607,30 @@ class PropertyEditor(QWidget):
         self._group_box_layout2.addWidget(self._search_btn, 2)
         self._group_box2.setLayout(self._group_box_layout2)
 
+        self._group_box_add_label = QGroupBox("添加标签", self)
+        self._add_label_group_layout = QVBoxLayout()
+        self._group_box_add_label.setLayout(self._add_label_group_layout)
+        self.attributes_LineEdit = QLineEdit('')
+        self.attributes_LineEdit.setPlaceholderText('attributes')
+        self.attributes_type = QComboBox()
+        self.attributes_type.addItems(self.get_attributes_type())
+        self.hotkey = QLineEdit('')
+        self.hotkey.setPlaceholderText('hotkey')
+        self.text_LineEdit = QLineEdit('')
+        self.text_LineEdit.setPlaceholderText('text')
+        self.attributes_add_btn = QPushButton('添加标签')
+        self.attributes_add_btn.clicked.connect(self.add_attributes)
+        self._add_label_group_layout.addWidget(self.attributes_LineEdit, 0)
+        self._add_label_group_layout.addWidget(self.attributes_type, 1)
+        self._add_label_group_layout.addWidget(self.hotkey, 2)
+        self._add_label_group_layout.addWidget(self.text_LineEdit, 3)
+        self._add_label_group_layout.addWidget(self.attributes_add_btn, 4)
+
         # Global widget
         self._layout = MyVBoxLayout()
         self.setLayout(self._layout)
         self._layout.addWidget(self._classbox, 0)
         self._layout.addStretch(1)
-        self._layout.addWidget(self._group_box, 1)
-        self._layout.addWidget(self._group_box2, 2)
+        self._layout.addWidget(self._group_box_add_label, 1)
+        self._layout.addWidget(self._group_box, 2)
+        self._layout.addWidget(self._group_box2, 3)

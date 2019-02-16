@@ -2,46 +2,46 @@
     {
         "attributes": {
             "class": "Face"
-        }, 
-        "inserter": "sloth.items.RectItemInserter", 
-        "item": "sloth.items.RectItem", 
-        "hotkey": "f", 
+        },
+        "hotkey": "f",
+        "inserter": "sloth.items.RectItemInserter",
+        "item": "sloth.items.RectItem",
         "text": "Face"
-    }, 
-    {//测试的中文comment
+    },
+    {
         "attributes": {
             "class": "中文"
-        }, 
-        "inserter": "sloth.items.RectItemInserter", 
-        "item": "sloth.items.RectItem", 
-        "hotkey": "f", 
+        },
+        "hotkey": "f",
+        "inserter": "sloth.items.RectItemInserter",
+        "item": "sloth.items.RectItem",
         "text": "中文"
-    }, 
+    },
     {
         "attributes": {
             "class": "rect"
-        }, 
-        "inserter": "sloth.items.RectItemInserter", 
-        "item": "sloth.items.RectItem", 
-        "hotkey": "r", 
+        },
+        "hotkey": "r",
+        "inserter": "sloth.items.RectItemInserter",
+        "item": "sloth.items.RectItem",
         "text": "Rectangle"
-    }, 
+    },
     {
         "attributes": {
             "class": "yiwu"
-        }, 
-        "inserter": "sloth.items.PointItemInserter", 
-        "item": "sloth.items.PointItem", 
-        "hotkey": "p", 
+        },
+        "hotkey": "p",
+        "inserter": "sloth.items.PointItemInserter",
+        "item": "sloth.items.PointItem",
         "text": "yiwu"
-    }, 
+    },
     {
         "attributes": {
             "class": "polygon"
-        }, 
-        "inserter": "sloth.items.PolygonItemInserter", 
-        "item": "sloth.items.PolygonItem", 
-        "hotkey": "o", 
+        },
+        "hotkey": "o",
+        "inserter": "sloth.items.PolygonItemInserter",
+        "item": "sloth.items.PolygonItem",
         "text": "Polygon"
     }
 ]
