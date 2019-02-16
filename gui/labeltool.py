@@ -303,8 +303,8 @@ class MainWindow(QMainWindow):
         self.contextMenu = QtGui.QMenu(self)
         self.actionA = self.contextMenu.addAction('打开文件所在文件夹')
         self.actionA.triggered.connect(self.openDirectory)
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.showContextMenu)
+        self.view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.view.customContextMenuRequested.connect(self.showContextMenu)
 
         self.view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.view.setScene(self.scene)
