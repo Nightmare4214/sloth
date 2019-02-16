@@ -14,7 +14,7 @@ app.setOrganizationDomain(ORGANIZATION_DOMAIN)
 app.setApplicationName(APP_NAME)
 jsons_type = ['*.json']
 format_str = ' '.join(jsons_type)
-fname = QFileDialog.getOpenFileName(QFileDialog(), "%s - Add Media File" % APP_NAME, '.',
+fname = QFileDialog.getOpenFileName(QFileDialog(), "%s - Select Config File" % APP_NAME, '.',
                                     "Json files (%s)" % (format_str,))
 print('select_json',fname)
 print('sys.argv[0]', sys.argv[0])

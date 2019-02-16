@@ -43,7 +43,7 @@ def write_txt(json_directory, defect, txt_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
     with open(os.path.join(directory,
-                           '.'.join(defect)+datetime.now().strftime('%Y_%m_%d_%H_%M_%S') + '.txt'), 'w') as f:
+                           '.'.join(defect)+'_'+datetime.now().strftime('%Y_%m_%d_%H_%M_%S') + '.txt'), 'w') as f:
         # f.write(str(pictures))
         for picture in pictures:
             f.write(picture + '\n')

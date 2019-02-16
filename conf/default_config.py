@@ -44,7 +44,6 @@ print('sys_directory', direct)
 with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
     label_path = f.read()
     print('config_json', label_path)
-# label_path = os.path.join(os.path.dirname(__file__), 'config.json')
 temp = []
 try:
     with open(label_path, 'r') as f:

@@ -456,6 +456,8 @@ class PropertyEditor(QWidget):
 
     def add_txt(self):
         defect = self.combo_box.currentText()
+        if defect is None or defect == '':
+            return
         dir_path = QFileDialog.getExistingDirectory(self)
         Main.write_txt(dir_path, {defect}, 'defect')
 
