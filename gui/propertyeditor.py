@@ -562,7 +562,9 @@ class PropertyEditor(QWidget):
         print(temp_json)
         try:
             self.addLabelClass(temp_json)
-            # @todo 去重还没实现
+            print(self._class_buttons.keys())
+            self._register('inserter', temp_json['attributes']['class'], temp_json['inserter'])
+            self._register('item', temp_json['attributes']['class'], temp_json['item'])
             self.rewrite_json(temp_json)
         except Exception as e:
             print(e)

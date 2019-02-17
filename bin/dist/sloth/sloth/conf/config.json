@@ -6,7 +6,7 @@
         "hotkey": "f",
         "inserter": "sloth.items.RectItemInserter",
         "item": "sloth.items.RectItem",
-        "text": "Face"
+        "text": "Face1"
     },
     {
         "attributes": {

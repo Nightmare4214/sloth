@@ -297,6 +297,8 @@ class MainWindow(QMainWindow):
         self.property_editor.insertionModeStarted.connect(self.scene.onInsertionModeStarted)
         self.property_editor.insertionModeEnded.connect(self.scene.onInsertionModeEnded)
 
+        self.property_editor._register = self.scene.add_label
+
         # SceneView
         self.view = GraphicsView(self)
 

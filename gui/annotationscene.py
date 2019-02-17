@@ -32,6 +32,12 @@ class AnnotationScene(QGraphicsScene):
             self.setBackgroundBrush(Qt.darkGray)
         self.reset()
 
+    def add_label(self, _type, label_type, item):
+        if _type == 'inserter':
+            self._inserterfactory.register(label_type, item, True)
+        elif _type == 'item':
+            self._itemfactory.register(label_type, item, True)
+
     #
     # getters/setters
     #
