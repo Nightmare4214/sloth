@@ -7,9 +7,9 @@ import time
 import logging
 
 from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import pyqtSignal, QSize, Qt
+from PyQt4.QtCore import pyqtSignal, QSize, Qt, QRegExp
 from PyQt4.QtGui import QWidget, QGroupBox, QVBoxLayout, QPushButton, QScrollArea, QLineEdit, QDoubleValidator, \
-    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor
+    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor, QRegExpValidator
 from sloth.annotations.container import AnnotationContainerFactory
 from sloth.core.exceptions import ImproperlyConfigured
 from sloth.annotations.model import AnnotationModelItem
@@ -618,6 +618,9 @@ class PropertyEditor(QWidget):
         self.attributes_type.addItems(self.get_attributes_type())
         self.hotkey = QLineEdit('')
         self.hotkey.setPlaceholderText('hotkey')
+        self.regx = QRegExp("[a-z0-9]$")
+        self.validator = QRegExpValidator(self.regx, self.hotkey)
+        self.hotkey.setValidator(self.validator)
         self.text_LineEdit = QLineEdit('')
         self.text_LineEdit.setPlaceholderText('text')
         self.attributes_add_btn = QPushButton('添加标签')
