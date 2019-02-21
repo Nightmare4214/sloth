@@ -238,6 +238,9 @@ class MainWindow(QMainWindow):
 
     def openDirectory(self):
         a = self.treeview.currentIndex()
+        while a.parent().data() is not None:
+            a = a.parent()
+        # while a.parent
         annotations = self.labeltool.annotations()
         open_path = os.path.dirname(annotations[a.row()]['filename'])
         print(annotations)
@@ -471,6 +474,15 @@ class MainWindow(QMainWindow):
 
         os.remove(temp_json_path)
 
+    def undo(self):
+        print('faQ')
+        a = self.treeview.currentIndex()
+        if a.parent().data() is None:
+            return
+        print('has faQ parent')
+        print(self.scene)
+        print(self.scene.sceneItem())
+
     def connectActions(self):
         ## File menu
         self.ui.actionNew.triggered.connect(self.fileNew)
@@ -495,6 +507,7 @@ class MainWindow(QMainWindow):
         self.ui.actionPrevious.triggered.connect(self.labeltool.gotoPrevious)
         self.ui.actionZoom_In.triggered.connect(functools.partial(self.view.setScaleRelative, 1.2))
         self.ui.actionZoom_Out.triggered.connect(functools.partial(self.view.setScaleRelative, 1 / 1.2))
+        self.ui.action_Undo.triggered.connect(self.undo)
 
         ## Connections to LabelTool
         self.labeltool.pluginLoaded.connect(self.onPluginLoaded)

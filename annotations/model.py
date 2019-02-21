@@ -794,7 +794,7 @@ class AnnotationSortFilterProxyModel(QSortFilterProxyModel):
 class AnnotationTreeView(QTreeView):
     selectedItemsChanged = pyqtSignal(object)
 
-    def set_openDirectory(self,openDirectory):
+    def set_openDirectory(self, openDirectory):
         self.contextMenu = QtGui.QMenu(self)
         self.actionA = self.contextMenu.addAction('打开文件所在文件夹')
         self.actionA.triggered.connect(openDirectory)

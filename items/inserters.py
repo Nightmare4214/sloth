@@ -73,7 +73,7 @@ class PointItemInserter(ItemInserter):
         if self._commit:
             image_item.addAnnotation(self._ann)
         self._item = QGraphicsEllipseItem(QRectF(pos.x() - 2,
-                                          pos.y() - 2, 5, 5))
+                                                 pos.y() - 2, 5, 5))
         self._item.setPen(self.pen())
         self.annotationFinished.emit()
         event.accept()
@@ -131,7 +131,7 @@ class RectItemInserter(ItemInserter):
     def mouseReleaseEvent(self, event, image_item):
         if self._item is not None:
             if self._item.rect().width() > 1 and \
-               self._item.rect().height() > 1:
+                    self._item.rect().height() > 1:
                 rect = self._item.rect()
                 self._ann.update({self._prefix + 'x': rect.x(),
                                   self._prefix + 'y': rect.y(),
@@ -268,10 +268,10 @@ class SequenceItemInserter(ItemInserter):
 
 class BBoxFaceInserter(SequenceItemInserter):
     inserters = [
-        (RectItemInserter,  "bbox", "Labelling bounding box"),
-        (PointItemInserter, "lec",  "Labelling left eye center"),
-        (PointItemInserter, "rec",  "Labelling right eye center"),
-        (PointItemInserter, "mc",   "Labelling mouth center"),
+        (RectItemInserter, "bbox", "Labelling bounding box"),
+        (PointItemInserter, "lec", "Labelling left eye center"),
+        (PointItemInserter, "rec", "Labelling right eye center"),
+        (PointItemInserter, "mc", "Labelling mouth center"),
     ]
 
     def toggleOccludedForCurrentInserter(self):
@@ -317,12 +317,12 @@ class BBoxFaceInserter(SequenceItemInserter):
 
 class NPointFaceInserter(SequenceItemInserter):
     inserters = [
-            (PointItemInserter, "leoc", "left eye outer corner"),
-            (PointItemInserter, "leic", "left eye inner corner"),
-            (PointItemInserter, "reic", "right eye inner corner"),
-            (PointItemInserter, "reoc", "right eye outer corner"),
-            (PointItemInserter, "nt",   "nose tip"),
-            (PointItemInserter, "ulc",  "upper lip center"),
+        (PointItemInserter, "leoc", "left eye outer corner"),
+        (PointItemInserter, "leic", "left eye inner corner"),
+        (PointItemInserter, "reic", "right eye inner corner"),
+        (PointItemInserter, "reoc", "right eye outer corner"),
+        (PointItemInserter, "nt", "nose tip"),
+        (PointItemInserter, "ulc", "upper lip center"),
     ]
 
     def toggleOccludedForCurrentInserter(self):
@@ -365,7 +365,7 @@ class PolygonItemInserter(ItemInserter):
 
     def _removeLastPointAndFinish(self, image_item):
         polygon = self._item.polygon()
-        polygon.remove(polygon.size()-1)
+        polygon.remove(polygon.size() - 1)
         assert polygon.size() > 0
         self._item.setPolygon(polygon)
 
@@ -407,7 +407,6 @@ class PolygonItemInserter(ItemInserter):
         self._removeLastPointAndFinish(image_item)
 
         event.accept()
-
 
     def mouseMoveEvent(self, event, image_item):
         if self._item is not None:
