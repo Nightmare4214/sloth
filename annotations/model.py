@@ -843,7 +843,6 @@ class AnnotationTreeView(QTreeView):
         sel = QItemSelection()
         for item in items:
             sel.merge(QItemSelection(item.index(), item.index(1)), QItemSelectionModel.SelectCurrent)
-        print(sel)
         if set(sel) != set(self.selectionModel().selection()):
             self.selectionModel().clear()
             self.selectionModel().select(sel, QItemSelectionModel.Select)

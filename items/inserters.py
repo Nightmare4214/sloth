@@ -422,11 +422,26 @@ class PolygonItemInserter(ItemInserter):
         """
         When the user presses Enter, the polygon is finished.
         """
+        if event.key() == Qt.Key_Control or event.key == Qt.Key_Shift or event.key == Qt.Key_Alt:
+            return
         if event.key() == Qt.Key_Return and self._item is not None:
             # The last point of the polygon is the point the user would add
             # to the polygon when pressing the mouse button. At this point,
             # we want to throw it away.
             self._removeLastPointAndFinish(image_item)
+            event.ignore()
+        uKey = event.key()
+        modifiers = event.modifiers()
+        if modifiers & Qt.ControlModifier:
+            uKey += Qt.Key_Control
+        print('uKey', uKey)
+        if (uKey == Qt.Key_Z + Qt.Key_Control) \
+            and self._item is not None:
+                polygon = self._item.polygon()
+                if polygon.size() == 1:
+                    event.ignore()
+                polygon = polygon[0:-1]
+                self._item.setPolygon(polygon)
 
     def abort(self):
         if self._item is not None:

@@ -1,1 +1,0 @@
-E:/sloth/bin/dist/sloth/sloth/conf/config.json

@@ -231,6 +231,24 @@ class AnnotationScene(QGraphicsScene):
             # selection mode
             QGraphicsScene.mouseMoveEvent(self, event)
 
+    def keyPressEvent(self, event):
+        if self._inserter is not None:
+            # insert mode
+            self._inserter.keyPressEvent(event, self._image_item)
+        else:
+            # selection mode
+            if event.key() == Qt.Key_Control or event.key == Qt.Key_Shift or event.key == Qt.Key_Alt:
+                return
+            uKey = event.key()
+            modifiers = event.modifiers()
+            if modifiers & Qt.ControlModifier:
+                uKey += Qt.Key_Control
+            elif uKey == Qt.Key_Z + Qt.Key_Control:
+                self._labeltool.undo()
+                event.accept()
+            else:
+                QGraphicsScene.keyPressEvent(self, event)
+
     def deselectAllItems(self):
         for item in self.items():
             item.setSelected(False)

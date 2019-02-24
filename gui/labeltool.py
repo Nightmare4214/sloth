@@ -1,17 +1,20 @@
 #!/usr/bin/python
 import json
-import logging, os
-import functools
 import fnmatch
+import functools
+import logging
+import os
 import platform
 
 import PyQt4.uic as uic
 import sloth.Main as Main
 from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import SIGNAL, QSettings, QSize, QPoint, QVariant, QFileInfo, QTimer, pyqtSignal, QObject, Qt
+from PyQt4.QtCore import SIGNAL, QSettings, QSize, QPoint, QVariant, QFileInfo, QTimer, pyqtSignal, QObject, Qt, \
+    QPointF, QEvent, QRectF
 from PyQt4.QtGui import QMainWindow, QSizePolicy, QWidget, QVBoxLayout, QAction, \
     QKeySequence, QLabel, QItemSelectionModel, QMessageBox, QFileDialog, QFrame, \
-    QDockWidget, QProgressBar, QProgressDialog, QCursor, QMenu, QGraphicsPolygonItem
+    QDockWidget, QProgressBar, QProgressDialog, QCursor, QMenu, QGraphicsPolygonItem, QMouseEvent, QApplication, \
+    QGraphicsEllipseItem
 from sloth import APP_NAME, ORGANIZATION_DOMAIN
 from sloth.annotations.container import AnnotationContainerFactory
 from sloth.annotations.model import AnnotationTreeView, FrameModelItem, ImageFileModelItem, CopyAnnotations, \
@@ -84,6 +87,7 @@ class MainWindow(QMainWindow):
         self.loadApplicationSettings()
         self.onAnnotationsLoaded()
 
+        self._point_dir = {}
     # Slots
     def onPluginLoaded(self, action):
         self.ui.menuPlugins.addAction(action)
@@ -407,7 +411,7 @@ class MainWindow(QMainWindow):
             for i in range(len(temp)):
                 current_json = temp[i]
                 if 'filename' in current_json and \
-                        set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
+                    set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
                     root = os.path.dirname(json_file)
                     filename = os.path.abspath(os.path.join(root, current_json['filename']))
                     filename = os.path.relpath(filename, '.')
@@ -475,16 +479,13 @@ class MainWindow(QMainWindow):
 
         os.remove(temp_json_path)
 
-    def undo(self):
-        print('faQ_1')
-        a = self.treeview.currentIndex()
-        # 判断有没有父亲
-        if a.parent().data() is None:
+    def undo_polygon(self, model_index):
+        if model_index.parent().data() is None:
             return
         # 判断有没有父亲的父亲
-        if a.parent().parent().data() is not None:
+        if model_index.parent().parent().data() is not None:
             return
-        attribute_class = a.data()
+        attribute_class = model_index.data()
         temp_conf = cf.LABELS
         for current_json in temp_conf:
             # 获得类型
@@ -499,15 +500,17 @@ class MainWindow(QMainWindow):
                 else:
                     return
 
-        attribute_class = a.data()
-        print(attribute_class)
+        attribute_class = model_index.data()
+        print('attribute_class', attribute_class)
+        if attribute_class == '':
+            return
         for i in self.scene.selectedItems():
             polygon = i._polygon
             if polygon.size() == 1:
                 self.scene.deleteSelectedItems()
                 return
             # 删除最后一个
-            polygon = polygon[0:-1]
+            # polygon = polygon[0:-1]
             self.scene.deleteSelectedItems()
             self.scene.onInsertionModeStarted(attribute_class)
             inserter = self.scene._inserter
@@ -517,13 +520,92 @@ class MainWindow(QMainWindow):
             item.setPen(inserter.pen())
             inserter._item = item
             self.scene.addItem(item)
-            inserter._updateAnnotation()
-            if inserter._commit:
-                self.scene._image_item.addAnnotation(inserter._ann)
-            inserter.annotationFinished.emit()
-            self.scene.removeItem(item)
-            inserter._item = None
-            inserter.inserterFinished.emit()
+            # inserter._updateAnnotation()
+            # if inserter._commit:
+            #     self.scene._image_item.addAnnotation(inserter._ann)
+            # inserter.annotationFinished.emit()
+            # self.scene.removeItem(item)
+            # inserter._item = None
+            # inserter.inserterFinished.emit()
+
+    def undo(self):
+        print('faQ_1')
+        a = self.treeview.currentIndex()
+        # 判断有没有父亲
+        while a.parent().data() is not None:
+            a = a.parent()
+        point_children = []
+        i = 0
+        temp_conf = cf.LABELS
+        while True:
+            child = a.child(i, 0)
+            if child.data() is None:
+                break
+            else:
+                for current_json in temp_conf:
+                    # 获得类型
+                    temp_attribute_class = current_json['attributes']['class']
+                    # 获得类型
+                    temp_type = current_json["item"]
+                    if child.data() == temp_attribute_class:
+                        # 点才有撤回功能
+                        if temp_type == "sloth.items.PointItem":
+                            point_children.append(child)
+                        break
+            i += 1
+        if len(point_children) == 0:
+            return
+        annotations = self.labeltool.annotations()
+        if a.row() < 0:
+            return
+        open_path = annotations[a.row()]['filename']
+        if open_path not in self._point_dir:
+            self._point_dir[open_path] = []
+
+        self._point_dir[open_path].append((temp_attribute_class, QPointF(point_children[-1].child(0, 1).data(),
+                                                                         point_children[-1].child(1, 1).data())))
+        self.treeview.setCurrentIndex(point_children[-1])
+        print(a == self.treeview.currentIndex())
+        self.scene.deleteSelectedItems()
+        self.treeview.setCurrentIndex(a)
+        print(self._point_dir)
+
+    def redo(self):
+        print('faQ_2')
+        a = self.treeview.currentIndex()
+        # 判断有没有父亲
+        while a.parent().data() is not None:
+            a = a.parent()
+        annotations = self.labeltool.annotations()
+        if a.row() < 0:
+            return
+        open_path = annotations[a.row()]['filename']
+        if open_path not in self._point_dir or len(self._point_dir[open_path]) == 0:
+            return
+        attribute_class = self._point_dir[open_path][-1][0]
+        print('attribute_class', attribute_class)
+        if attribute_class == '' or attribute_class is None:
+            return
+        self.property_editor._class_buttons[attribute_class].click()
+        pos = self._point_dir[open_path][-1][1]
+        inserter = self.scene._inserter
+        inserter._ann['class'] = attribute_class
+        inserter._ann[None] = None
+        inserter._ann.update({
+            inserter._prefix + 'x': pos.x(),
+            inserter._prefix + 'y': pos.y()})
+        inserter._ann.update(inserter._default_properties)
+        if inserter._commit:
+            self.scene._image_item.addAnnotation(inserter._ann)
+        inserter._item = QGraphicsEllipseItem(QRectF(pos.x() - 2,
+                                                 pos.y() - 2, 5, 5))
+        inserter._item.setPen(inserter.pen())
+        inserter.annotationFinished.emit()
+        self.property_editor._class_buttons[attribute_class].click()
+        if len(self._point_dir[open_path]) == 1:
+            self._point_dir[open_path] = []
+        else:
+            self._point_dir[open_path] = self._point_dir[open_path][0:-1]
 
     def connectActions(self):
         ## File menu
@@ -705,6 +787,26 @@ class MainWindow(QMainWindow):
         self.ui.dockProperties.setFeatures(features)
         self.ui.dockAnnotations.setFeatures(features)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Control or event.key == Qt.Key_Shift or event.key == Qt.Key_Alt:
+            return
+        uKey = event.key()
+        modifiers = event.modifiers()
+        if modifiers & Qt.ControlModifier:
+            uKey += Qt.Key_Control
+        if modifiers & Qt.ShiftModifier:
+            uKey += Qt.Key_Shift
+        if uKey == Qt.Key_Z + Qt.Key_Control:
+            self.undo()
+            event.accept()
+        elif uKey == Qt.Key_Z + Qt.Key_Control + Qt.Key_Shift:
+            self.redo()
+            event.accept()
+        else:
+            try:
+                MainWindow.keyPressEvent(event)
+            except TypeError:
+                pass
     ###
     ### global event handling
     ###______________________________________________________________________________
