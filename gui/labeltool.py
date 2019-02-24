@@ -5,25 +5,26 @@ import functools
 import fnmatch
 import platform
 
+import PyQt4.uic as uic
+import sloth.Main as Main
 from PyQt4 import QtGui, QtCore
+from PyQt4.QtCore import SIGNAL, QSettings, QSize, QPoint, QVariant, QFileInfo, QTimer, pyqtSignal, QObject, Qt
 from PyQt4.QtGui import QMainWindow, QSizePolicy, QWidget, QVBoxLayout, QAction, \
     QKeySequence, QLabel, QItemSelectionModel, QMessageBox, QFileDialog, QFrame, \
-    QDockWidget, QProgressBar, QProgressDialog, QCursor, QMenu
-from PyQt4.QtCore import SIGNAL, QSettings, QSize, QPoint, QVariant, QFileInfo, QTimer, pyqtSignal, QObject, Qt
-import PyQt4.uic as uic
-from sloth.gui import qrc_icons  # needed for toolbar icons
-from sloth.gui.propertyeditor import PropertyEditor
-from sloth.gui.annotationscene import AnnotationScene
-from sloth.gui.frameviewer import GraphicsView
-from sloth.gui.controlbuttons import ControlButtonWidget
-from sloth.conf import config
-from sloth.core.utils import import_callable
+    QDockWidget, QProgressBar, QProgressDialog, QCursor, QMenu, QGraphicsPolygonItem
+from sloth import APP_NAME, ORGANIZATION_DOMAIN
+from sloth.annotations.container import AnnotationContainerFactory
 from sloth.annotations.model import AnnotationTreeView, FrameModelItem, ImageFileModelItem, CopyAnnotations, \
     InterpolateRange
-from sloth import APP_NAME, ORGANIZATION_DOMAIN
+from sloth.conf import config
+from sloth.core.utils import import_callable
+from sloth.gui import qrc_icons  # needed for toolbar icons
+from sloth.gui.annotationscene import AnnotationScene
+from sloth.gui.controlbuttons import ControlButtonWidget
+from sloth.gui.frameviewer import GraphicsView
+from sloth.gui.propertyeditor import PropertyEditor
 from sloth.utils.bind import bind, compose_noargs
-import sloth.Main as Main
-from sloth.annotations.container import AnnotationContainerFactory
+import sloth.conf.default_config as cf
 
 GUIDIR = os.path.join(os.path.dirname(__file__))
 
@@ -137,13 +138,11 @@ class MainWindow(QMainWindow):
         self.treeview.scrollTo(new_image.index())
 
         img = self.labeltool.getImage(new_image)
-
-        if img == None:
+        if img.any() == None:
             self.controls.setFilename("")
             self.selectionmodel.setCurrentIndex(new_image.index(),
                                                 QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
             return
-
         h = img.shape[0]
         w = img.shape[1]
         self.image_resolution.setText("%dx%d" % (w, h))
@@ -242,6 +241,8 @@ class MainWindow(QMainWindow):
             a = a.parent()
         # while a.parent
         annotations = self.labeltool.annotations()
+        if a.row() < 0:
+            return
         open_path = os.path.dirname(annotations[a.row()]['filename'])
         print(annotations)
         print(a.row())
@@ -363,7 +364,7 @@ class MainWindow(QMainWindow):
         self.copyAnnotations = CopyAnnotations(self.labeltool)
         self.interpolateRange = InterpolateRange(self.labeltool)
 
-        # Show the UI.  It is important that this comes *after* the above 
+        # Show the UI.  It is important that this comes *after* the above
         # adding of custom widgets, especially the central widget.  Otherwise the
         # dock widgets would be far to large.
         self.ui.show()
@@ -475,13 +476,54 @@ class MainWindow(QMainWindow):
         os.remove(temp_json_path)
 
     def undo(self):
-        print('faQ')
+        print('faQ_1')
         a = self.treeview.currentIndex()
+        # 判断有没有父亲
         if a.parent().data() is None:
             return
-        print('has faQ parent')
-        print(self.scene)
-        print(self.scene.sceneItem())
+        # 判断有没有父亲的父亲
+        if a.parent().parent().data() is not None:
+            return
+        attribute_class = a.data()
+        temp_conf = cf.LABELS
+        for current_json in temp_conf:
+            # 获得类型
+            temp_attribute_class = current_json['attributes']['class']
+            # 获得类型
+            temp_type = current_json["item"]
+            if attribute_class == temp_attribute_class:
+                # 多边形才有撤回功能
+                if temp_type == "sloth.items.PolygonItem":
+                    print('is PolygonItem')
+                    break
+                else:
+                    return
+
+        attribute_class = a.data()
+        print(attribute_class)
+        for i in self.scene.selectedItems():
+            polygon = i._polygon
+            if polygon.size() == 1:
+                self.scene.deleteSelectedItems()
+                return
+            # 删除最后一个
+            polygon = polygon[0:-1]
+            self.scene.deleteSelectedItems()
+            self.scene.onInsertionModeStarted(attribute_class)
+            inserter = self.scene._inserter
+            inserter._ann['class'] = attribute_class
+            inserter._ann[None] = None
+            item = QGraphicsPolygonItem(polygon)
+            item.setPen(inserter.pen())
+            inserter._item = item
+            self.scene.addItem(item)
+            inserter._updateAnnotation()
+            if inserter._commit:
+                self.scene._image_item.addAnnotation(inserter._ann)
+            inserter.annotationFinished.emit()
+            self.scene.removeItem(item)
+            inserter._item = None
+            inserter.inserterFinished.emit()
 
     def connectActions(self):
         ## File menu
