@@ -18,6 +18,7 @@ fname = QFileDialog.getOpenFileName(QFileDialog(), "%s - Select Config File" % A
                                     "Json files (%s)" % (format_str,))
 print('select_json',fname)
 print('sys.argv[0]', sys.argv[0])
+# 在sloth.txt中写入这次配置文件的路径
 direct = os.path.dirname(sys.argv[0])
 with open(os.path.join(direct, 'sloth.txt'), 'w') as f:
     f.write(fname)

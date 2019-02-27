@@ -88,6 +88,7 @@ class MainWindow(QMainWindow):
         self.onAnnotationsLoaded()
 
         self._point_dir = {}
+
     # Slots
     def onPluginLoaded(self, action):
         self.ui.menuPlugins.addAction(action)
@@ -235,10 +236,10 @@ class MainWindow(QMainWindow):
             action.setCheckable(True)
             self.ui.menuAnnotation.addAction(action)
             self.annotationMenu[a] = action
-
+    # 设置右键的菜单位置
     def showContextMenu(self):
         self.contextMenu.exec_(QCursor.pos())
-
+    # 打开文件所在路径
     def openDirectory(self):
         a = self.treeview.currentIndex()
         while a.parent().data() is not None:
@@ -310,12 +311,12 @@ class MainWindow(QMainWindow):
         # SceneView
         self.view = GraphicsView(self)
 
+        # 在图片上设置右键菜单
         self.contextMenu = QtGui.QMenu(self)
         self.actionA = self.contextMenu.addAction('打开文件所在文件夹')
         self.actionA.triggered.connect(self.openDirectory)
         self.view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.view.customContextMenuRequested.connect(self.showContextMenu)
-
         self.view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.view.setScene(self.scene)
 
@@ -336,6 +337,7 @@ class MainWindow(QMainWindow):
         self.initAnnotationMenu()
 
         self.treeview = AnnotationTreeView()
+        # 在treeview设置右键
         self.treeview.set_openDirectory(self.openDirectory)
         self.treeview.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         self.ui.dockAnnotations.setWidget(self.treeview)
@@ -375,12 +377,12 @@ class MainWindow(QMainWindow):
 
         ## connect action signals
         self.connectActions()
-
+    # 获得临时的json名字
     def get_name(self, temp_json_path='faQ.json'):
         while os.path.exists(temp_json_path):
             temp_json_path = os.path.splitext(temp_json_path)[0] + '(1)' + '.json'
         return temp_json_path
-
+    # 添加json
     def add_json(self):
         temp_json = []
         filename_set = set()
@@ -411,7 +413,7 @@ class MainWindow(QMainWindow):
             for i in range(len(temp)):
                 current_json = temp[i]
                 if 'filename' in current_json and \
-                    set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
+                        set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
                     root = os.path.dirname(json_file)
                     filename = os.path.abspath(os.path.join(root, current_json['filename']))
                     filename = os.path.relpath(filename, '.')
@@ -428,7 +430,7 @@ class MainWindow(QMainWindow):
         self.labeltool.loadAnnotations(temp_json_path)
 
         os.remove(temp_json_path)
-
+    # 添加所有的json
     def add_all_json(self, key_word=None):
         temp_json = []
         filename_set = set()
@@ -479,6 +481,7 @@ class MainWindow(QMainWindow):
 
         os.remove(temp_json_path)
 
+    # 重做多边形，按照点撤回，如ABCDE->ABCD
     def undo_polygon(self, model_index):
         if model_index.parent().data() is None:
             return
@@ -528,6 +531,7 @@ class MainWindow(QMainWindow):
             # inserter._item = None
             # inserter.inserterFinished.emit()
 
+    # 撤回，只撤回点
     def undo(self):
         print('faQ_1')
         a = self.treeview.currentIndex()
@@ -570,6 +574,7 @@ class MainWindow(QMainWindow):
         self.treeview.setCurrentIndex(a)
         print(self._point_dir)
 
+    # 重做（相当于ctrl+y或者ctrl+shift+z)，只重做点
     def redo(self):
         print('faQ_2')
         a = self.treeview.currentIndex()
@@ -598,7 +603,7 @@ class MainWindow(QMainWindow):
         if inserter._commit:
             self.scene._image_item.addAnnotation(inserter._ann)
         inserter._item = QGraphicsEllipseItem(QRectF(pos.x() - 2,
-                                                 pos.y() - 2, 5, 5))
+                                                     pos.y() - 2, 5, 5))
         inserter._item.setPen(inserter.pen())
         inserter.annotationFinished.emit()
         self.property_editor._class_buttons[attribute_class].click()
@@ -731,7 +736,8 @@ class MainWindow(QMainWindow):
         format_str = ' '.join(image_types + video_types)
         fnames = QFileDialog.getOpenFileNames(self, "%s - Add Media File" % APP_NAME, path,
                                               "Media files (%s)" % (format_str,))
-
+        if fnames is None or fnames == []:
+            return
         item = None
         numFiles = len(fnames)
         progress_bar = QProgressDialog('Importing files...', 'Cancel import', 0, numFiles, self)
@@ -757,8 +763,8 @@ class MainWindow(QMainWindow):
 
         return item
 
+    # 读取文件夹的所有含merge的图片
     def addMediaFile1(self):
-
         path = '.'
         # 标志位
         key_word = 'merge'
@@ -807,6 +813,7 @@ class MainWindow(QMainWindow):
                 MainWindow.keyPressEvent(event)
             except TypeError:
                 pass
+
     ###
     ### global event handling
     ###______________________________________________________________________________

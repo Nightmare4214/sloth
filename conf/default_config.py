@@ -39,6 +39,7 @@ import os
 #   - 'text' : (optional) A label for the item's GUI button.
 print('faQ2')
 print('sys.argv[0]', sys.argv[0])
+# 获取这次配置文件的路径
 direct = os.path.dirname(sys.argv[0])
 print('sys_directory', direct)
 with open(os.path.join(direct, 'sloth.txt'), 'r') as f:

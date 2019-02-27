@@ -346,9 +346,11 @@ class PropertyEditor(QWidget):
                 for val in vals:
                     h.addValue(val, True)
 
+    # 设置右键菜单所在位置
     def showContextMenu(self, label_class):
         self._class_context[label_class].exec_(QCursor.pos())
 
+    # 删除标签
     def remove_item(self, label_class):
         print(label_class)
         try:
@@ -407,7 +409,7 @@ class PropertyEditor(QWidget):
         self._class_buttons[label_class] = button
         self._classbox_layout.addWidget(button)
 
-        # 添加菜单栏
+        # 添加右键菜单
         self._class_context[label_class] = QtGui.QMenu(self)
         self._class_action[label_class] = self._class_context[label_class].addAction('删除')
         self._class_action[label_class].triggered.connect(bind(self.remove_item, label_class))
@@ -501,6 +503,7 @@ class PropertyEditor(QWidget):
         self.markEditButtons(self._label_editor.labelClasses())
         self._layout.insertWidget(1, self._label_editor, 0)
 
+    # 添加txt
     def add_txt(self):
         defect = self.combo_box.currentText()
         if defect is None or defect == '':
@@ -508,17 +511,21 @@ class PropertyEditor(QWidget):
         dir_path = QFileDialog.getExistingDirectory(self)
         Main.write_txt(dir_path, {defect}, 'defect')
 
+    # 从labeltool中设置搜索按钮
     def setFunction(self, func):
         self._search_btn.clicked.connect(func)
 
+    # 获得关键字
     def get_key_word(self):
         key_word = self._key_word.text()
         if key_word is None or key_word == '':
             key_word = self._key_word.placeholderText()
         return key_word
 
+    # 获得文件类型
     def get_extension(self):
         extension = self._extension.text()
+        # 为空则用默认的，否则用输入的
         if extension is None or extension == '':
             extension = self._extension.placeholderText()
         return extension
@@ -532,24 +539,32 @@ class PropertyEditor(QWidget):
         '''
         return ['Rect', 'Point', 'Polygon']
 
+    # 写回json
     def rewrite_json(self, temp_json):
+        # json所在的txt
         direct = os.path.dirname(sys.argv[0])
         with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
             label_path = f.read()
         try:
+            # 读取旧json
             with open(label_path, 'r') as f:
                 temp = json5.load(f)
+            # 追加我们要写入的json
             temp.append(temp_json)
+            # 写入
             with open(label_path, 'w') as f:
                 json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
         except Exception as e:
             print(e)
 
+    # 添加标签
     def add_attributes(self):
         print('faQ_add_attributes')
+        # 转换dict
         type_dict = {'Rect': ('sloth.items.RectItem', 'sloth.items.RectItemInserter'),
                      'Point': ('sloth.items.PointItem', 'sloth.items.PointItemInserter'),
                      'Polygon': ('sloth.items.PolygonItem', 'sloth.items.PolygonItemInserter')}
+        # 获取添加的标签信息
         attributes = {'class': self.attributes_LineEdit.text()}
         attributes_item, attributes_inserter = type_dict[self.attributes_type.currentText()]
         attributes_hotkey = self.hotkey.text()
@@ -557,14 +572,20 @@ class PropertyEditor(QWidget):
         temp_json = {'attributes': attributes, 'inserter': attributes_inserter,
                      'item': attributes_item,
                      'text': attributes_text}
+        # 快捷键
         if attributes_hotkey is not None and attributes_hotkey != '':
             temp_json['hotkey'] = attributes_hotkey
         print(temp_json)
         try:
+            # 加入标签
             self.addLabelClass(temp_json)
             print(self._class_buttons.keys())
+            # 注册
             self._register('inserter', temp_json['attributes']['class'], temp_json['inserter'])
             self._register('item', temp_json['attributes']['class'], temp_json['item'])
+            # add_txt的下拉框里也要添加
+            self.combo_box.addItem(temp_json['attributes']['class'])
+            # 写回json
             self.rewrite_json(temp_json)
         except Exception as e:
             print(e)
@@ -581,50 +602,63 @@ class PropertyEditor(QWidget):
         self._classbox_layout = FloatingLayout()
         self._classbox.setLayout(self._classbox_layout)
 
+        # 添加txt模块
         self.combo_box = QComboBox()
         self._group_box = QGroupBox('add_txt', self)
         self._group_box_layout = QVBoxLayout()
         self._group_box.setLayout(self._group_box_layout)
         temp = cf.LABELS
         items = []
+        # 获取所有的标签
         for i in temp:
             items.append(i['attributes']['class'])
+        # 假如下拉框
         self.combo_box.addItems(items)
-        self.btn2 = QPushButton('add txt')
-        self.btn2.clicked.connect(self.add_txt)
-
+        self.add_txt_btn = QPushButton('add txt')
+        self.add_txt_btn.clicked.connect(self.add_txt)
+        # 加入下拉框和按钮
         self._group_box_layout.addWidget(self.combo_box, 0)
-        self._group_box_layout.addWidget(self.btn2, 1)
+        self._group_box_layout.addWidget(self.add_txt_btn, 1)
 
+        # 根据关键字搜索图片模块
         self._group_box2 = QGroupBox('add files', self)
+        # 文件名包含的
         self._key_word = QLineEdit('')
         self._key_word.setPlaceholderText('merge')
+        # 文件类型
         self._extension = QLineEdit('')
         self._extension.setPlaceholderText('bmp')
         self._search_btn = QPushButton('search files')
-        # self._search_btn.clicked.connect(self.search_file)
         self._group_box_layout2 = QVBoxLayout()
+        # 加入控件
         self._group_box_layout2.addWidget(self._key_word, 0)
         self._group_box_layout2.addWidget(self._extension, 1)
         self._group_box_layout2.addWidget(self._search_btn, 2)
         self._group_box2.setLayout(self._group_box_layout2)
 
+        # 添加标签模块
         self._group_box_add_label = QGroupBox("添加标签", self)
         self._add_label_group_layout = QVBoxLayout()
         self._group_box_add_label.setLayout(self._add_label_group_layout)
+        # 标签的class
         self.attributes_LineEdit = QLineEdit('')
         self.attributes_LineEdit.setPlaceholderText('attributes')
+        # 标签画出来的类型
         self.attributes_type = QComboBox()
         self.attributes_type.addItems(self.get_attributes_type())
+        # 快捷键，目前设置了只允许一个键
         self.hotkey = QLineEdit('')
         self.hotkey.setPlaceholderText('hotkey')
         self.regx = QRegExp("[a-z0-9]$")
         self.validator = QRegExpValidator(self.regx, self.hotkey)
         self.hotkey.setValidator(self.validator)
+        # 标签显示
         self.text_LineEdit = QLineEdit('')
         self.text_LineEdit.setPlaceholderText('text')
+        # 按钮
         self.attributes_add_btn = QPushButton('添加标签')
         self.attributes_add_btn.clicked.connect(self.add_attributes)
+        # 假如控件
         self._add_label_group_layout.addWidget(self.attributes_LineEdit, 0)
         self._add_label_group_layout.addWidget(self.attributes_type, 1)
         self._add_label_group_layout.addWidget(self.hotkey, 2)
