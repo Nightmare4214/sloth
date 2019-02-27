@@ -236,9 +236,11 @@ class MainWindow(QMainWindow):
             action.setCheckable(True)
             self.ui.menuAnnotation.addAction(action)
             self.annotationMenu[a] = action
+
     # 设置右键的菜单位置
     def showContextMenu(self):
         self.contextMenu.exec_(QCursor.pos())
+
     # 打开文件所在路径
     def openDirectory(self):
         a = self.treeview.currentIndex()
@@ -377,34 +379,46 @@ class MainWindow(QMainWindow):
 
         ## connect action signals
         self.connectActions()
+
     # 获得临时的json名字
     def get_name(self, temp_json_path='faQ.json'):
         while os.path.exists(temp_json_path):
             temp_json_path = os.path.splitext(temp_json_path)[0] + '(1)' + '.json'
         return temp_json_path
+
     # 添加json
     def add_json(self):
         temp_json = []
+        # 文件set，每个文件只读一次
         filename_set = set()
         path = '.'
+        # 获取临时json路径
         temp_json_path = self.get_name()
+        # 保存json
         self.labeltool.saveAnnotations(temp_json_path)
+        # 读入json
         with open(temp_json_path, 'r') as f:
             temp = json.load(f)
         for i in range(len(temp)):
             current_json = temp[i]
             if 'filename' in current_json:
+                # 绝对路径
                 filename = os.path.abspath(os.path.join('.', current_json['filename']))
+                # 相对路径
                 filename = os.path.relpath(filename, '.')
+                # 只读一次
                 if filename in filename_set:
                     continue
                 else:
                     filename_set.add(filename)
                 current_json['filename'] = filename
+                # 假如json
                 temp_json.append(current_json)
+        # 删除临时json
         os.remove(temp_json_path)
         json_types = ['*.json']
         format_str = ' '.join(json_types)
+        # 读取多个json
         fnames = QFileDialog.getOpenFileNames(self, "%s - Add json File" % APP_NAME, path,
                                               "json files (%s)" % (format_str,))
         for json_file in fnames:
@@ -412,73 +426,99 @@ class MainWindow(QMainWindow):
                 temp = json.load(f)
             for i in range(len(temp)):
                 current_json = temp[i]
+                # 必须要有'annotations', 'class', 'filename'
                 if 'filename' in current_json and \
                         set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
                     root = os.path.dirname(json_file)
+                    # 绝对路径
                     filename = os.path.abspath(os.path.join(root, current_json['filename']))
+                    # 相对路径
                     filename = os.path.relpath(filename, '.')
+                    # 只加一次
                     if filename in filename_set:
                         continue
                     else:
                         filename_set.add(filename)
                     current_json['filename'] = filename
+                    # 加入json
                     temp_json.append(current_json)
+        # 获取json
         temp_json_path = self.get_name()
         container = AnnotationContainerFactory(config.CONTAINERS).create(temp_json_path)
+        # 保存json
         container.save(temp_json, temp_json_path)
-
+        # 读取json
         self.labeltool.loadAnnotations(temp_json_path)
-
+        # 移除临时json
         os.remove(temp_json_path)
+
     # 添加所有的json
     def add_all_json(self, key_word=None):
         temp_json = []
+        # 文件set，保证文件只加一次
         filename_set = set()
-
+        # 获取临时json路径
         temp_json_path = self.get_name()
+        # 保存目前的json
         self.labeltool.saveAnnotations(temp_json_path)
+        # 读入刚刚的json
         with open(temp_json_path, 'r') as f:
             temp = json.load(f)
         for i in range(len(temp)):
             current_json = temp[i]
             if 'filename' in current_json:
+                # 绝对路径
                 filename = os.path.abspath(os.path.join('.', current_json['filename']))
+                # 相对路径
                 filename = os.path.relpath(filename, '.')
+                # 只添加一次
                 if filename in filename_set:
                     continue
                 else:
                     filename_set.add(filename)
                 current_json['filename'] = filename
                 temp_json.append(current_json)
+        # 删除临时的json
         os.remove(temp_json_path)
-
+        # 要读取的json文件夹
         json_path = QFileDialog.getExistingDirectory(self)
+        # 遍历所有的文件
         for root, dirs, files in os.walk(json_path):
             for file in files:
+
                 temp_split = os.path.splitext(file)
+                # 只读取json的
                 if temp_split[-1] == '.json':
+                    # 查看是否包含关键字key_word
                     if key_word is not None and key_word and temp_split[0].find(str(key_word)) < 0:
                         continue
+                    # json的路径
                     json_file = os.path.join(root, file)
                     with open(json_file, 'r') as f:
                         temp = json.load(f)
                     for i in range(len(temp)):
                         current_json = temp[i]
                         if 'filename' in current_json:
+                            # 绝对路径
                             filename = os.path.abspath(os.path.join(root, current_json['filename']))
+                            # 相对路径
                             filename = os.path.relpath(filename, '.')
+                            # 只读取一次
                             if filename in filename_set:
                                 continue
                             else:
                                 filename_set.add(filename)
                             current_json['filename'] = filename
+                            # 加入json
                             temp_json.append(current_json)
+        # 临时json
         temp_json_path = self.get_name()
+        # 保存json
         container = AnnotationContainerFactory(config.CONTAINERS).create(temp_json_path)
         container.save(temp_json, temp_json_path)
-
+        # 读入json
         self.labeltool.loadAnnotations(temp_json_path)
-
+        # 删除临时的json
         os.remove(temp_json_path)
 
     # 重做多边形，按照点撤回，如ABCDE->ABCD
