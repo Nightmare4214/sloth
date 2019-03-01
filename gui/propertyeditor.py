@@ -373,11 +373,19 @@ class PropertyEditor(QWidget):
                 for i, current_json in enumerate(temp):
                     if current_json['attributes']['class'] == label_class:
                         temp.remove(current_json)
-                        print(i)
-                        print(temp)
+                        try:
+                            for i in range(100):
+                                current_label=self.combo_box.itemText(i)
+                                if current_label==label_class:
+                                    print('removed',label_class)
+                                    self.combo_box.removeItem(i)
+                                    break
+                        except Exception as f:
+                            return
                         break
                 with open(label_path, 'w') as f:
                     json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
+
             except Exception as e:
                 print(e)
         except Exception as e:
