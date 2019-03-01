@@ -373,15 +373,13 @@ class PropertyEditor(QWidget):
                 for i, current_json in enumerate(temp):
                     if current_json['attributes']['class'] == label_class:
                         temp.remove(current_json)
-                        try:
-                            for i in range(100):
-                                current_label=self.combo_box.itemText(i)
-                                if current_label==label_class:
-                                    print('removed',label_class)
-                                    self.combo_box.removeItem(i)
-                                    break
-                        except Exception as f:
-                            return
+                        # 遍历combo box 找到要删的
+                        for i in range(len(self.combo_box)):
+                            current_label = self.combo_box.itemText(i)
+                            if current_label == label_class:
+                                print('removed', label_class)
+                                self.combo_box.removeItem(i)
+                                break
                         break
                 with open(label_path, 'w') as f:
                     json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
