@@ -251,9 +251,6 @@ class MainWindow(QMainWindow):
         if a.row() < 0:
             return
         open_path = os.path.dirname(annotations[a.row()]['filename'])
-        print(annotations)
-        print(a.row())
-        print(os.path.abspath(annotations[a.row()]['filename']))
         try:
             sysstr = platform.system()
             if sysstr == "Windows":
@@ -277,7 +274,7 @@ class MainWindow(QMainWindow):
             progress_bar = QProgressDialog('Importing files...', 'Cancel import', 0, numFiles, self)
             item = None
             for fname, c in zip(fnames, range(numFiles)):
-                item = self.labeltool.addImageFile(os.path.relpath(fname, '.'))
+                item = self.labeltool.addImageFile(self.real_path(fname, '.'))
                 progress_bar.setValue(c)
             progress_bar.close()
             return item
@@ -386,6 +383,12 @@ class MainWindow(QMainWindow):
             temp_json_path = os.path.splitext(temp_json_path)[0] + '(1)' + '.json'
         return temp_json_path
 
+    # path和项目同盘符则返回相对start路径，否则返回绝对路径
+    def real_path(self, path, start):
+        if os.path.isabs(path):
+            return path
+        return os.path.relpath(path, start)
+
     # 添加json
     def add_json(self):
         temp_json = []
@@ -398,14 +401,14 @@ class MainWindow(QMainWindow):
         self.labeltool.saveAnnotations(temp_json_path)
         # 读入json
         with open(temp_json_path, 'r') as f:
-            temp = json.load(f)
-        for i in range(len(temp)):
-            current_json = temp[i]
+            json_array = json.load(f)
+        for i in range(len(json_array)):
+            current_json = json_array[i]
             if 'filename' in current_json:
                 # 绝对路径
                 filename = os.path.abspath(os.path.join('.', current_json['filename']))
                 # 相对路径
-                filename = os.path.relpath(filename, '.')
+                filename = self.real_path(filename, '.')
                 # 只读一次
                 if filename in filename_set:
                     continue
@@ -423,9 +426,9 @@ class MainWindow(QMainWindow):
                                               "json files (%s)" % (format_str,))
         for json_file in fnames:
             with open(json_file, 'r') as f:
-                temp = json.load(f)
-            for i in range(len(temp)):
-                current_json = temp[i]
+                json_array = json.load(f)
+            for i in range(len(json_array)):
+                current_json = json_array[i]
                 # 必须要有'annotations', 'class', 'filename'
                 if 'filename' in current_json and \
                         set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
@@ -433,7 +436,7 @@ class MainWindow(QMainWindow):
                     # 绝对路径
                     filename = os.path.abspath(os.path.join(root, current_json['filename']))
                     # 相对路径
-                    filename = os.path.relpath(filename, '.')
+                    filename = self.real_path(filename, '.')
                     # 只加一次
                     if filename in filename_set:
                         continue
@@ -470,7 +473,7 @@ class MainWindow(QMainWindow):
                 # 绝对路径
                 filename = os.path.abspath(os.path.join('.', current_json['filename']))
                 # 相对路径
-                filename = os.path.relpath(filename, '.')
+                filename = self.real_path(filename, '.')
                 # 只添加一次
                 if filename in filename_set:
                     continue
@@ -485,7 +488,7 @@ class MainWindow(QMainWindow):
         # 遍历所有的文件
         for root, dirs, files in os.walk(json_path):
             for file in files:
-
+                # 获取文件名字
                 temp_split = os.path.splitext(file)
                 # 只读取json的
                 if temp_split[-1] == '.json':
@@ -494,15 +497,25 @@ class MainWindow(QMainWindow):
                         continue
                     # json的路径
                     json_file = os.path.join(root, file)
-                    with open(json_file, 'r') as f:
-                        temp = json.load(f)
+                    try:
+                        with open(json_file, 'r') as f:
+                            temp = json.load(f)
+                    except Exception as e:
+                        print('读取%s失败' % json_file)
+                        continue
                     for i in range(len(temp)):
-                        current_json = temp[i]
-                        if 'filename' in current_json:
+                        # 如果读进来是个json而不是json_array，将会报错
+                        try:
+                            current_json = temp[i]
+                        except Exception as e:
+                            break
+                        # 判断filename在json中
+                        if 'filename' in current_json and \
+                                set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
                             # 绝对路径
                             filename = os.path.abspath(os.path.join(root, current_json['filename']))
                             # 相对路径
-                            filename = os.path.relpath(filename, '.')
+                            filename = self.real_path(filename, '.')
                             # 只读取一次
                             if filename in filename_set:
                                 continue
@@ -732,10 +745,12 @@ class MainWindow(QMainWindow):
                 return self.fileSave()
         return True
 
+    # 新建Annotations
     def fileNew(self):
         if self.okToContinue():
             self.labeltool.clearAnnotations()
 
+    # 打开Annotations
     def fileOpen(self):
         if not self.okToContinue():
             return
@@ -751,9 +766,11 @@ class MainWindow(QMainWindow):
         if len(str(fname)) > 0:
             self.labeltool.loadAnnotations(fname)
 
+    # 保存
     def fileSave(self):
         return self.labeltool.saveAnnotations(None)
 
+    # 另保存
     def fileSaveAs(self):
         fname = '.'  # self.annotations.filename() or '.'
         format_str = ' '.join(self.labeltool.getAnnotationFilePatterns())
@@ -786,9 +803,9 @@ class MainWindow(QMainWindow):
                 continue
 
             fname = str(fname)
-
             if os.path.isabs(fname):
-                fname = os.path.relpath(fname, str(path))
+                # fname = os.path.relpath(fname, str(path))
+                fname = self.real_path(fname, str(path))
 
             for pattern in image_types:
                 if fnmatch.fnmatch(fname.lower(), pattern):
@@ -818,7 +835,7 @@ class MainWindow(QMainWindow):
         item = None
         for fname, c in zip(fnames, range(numFiles)):
             if '*' + os.path.splitext(fname)[-1] in image_types:
-                item = self.labeltool.addImageFile(os.path.relpath(fname, path))
+                item = self.labeltool.addImageFile(self.real_path(fname, path))
             progress_bar.setValue(c)
         if item is None:
             return self.labeltool.addVideoFile(fname)
