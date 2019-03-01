@@ -256,6 +256,7 @@ class LabelTool(QObject):
 
             # Get annotations dict
             ann = self._model.root().getAnnotations()
+            print('save', ann)
             # getNewFile(ann)
             if fname is None:
                 # 遍历json，找到图片对应的部分，然后分别生成图片对应的json
