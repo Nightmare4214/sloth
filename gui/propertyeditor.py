@@ -1,4 +1,6 @@
 import json
+import random
+import shutil
 import sys
 
 import json5
@@ -326,6 +328,7 @@ class PropertyEditor(QWidget):
         # Add label classes from config
         for label in config:
             self.addLabelClass(label)
+        self.image_path = None
 
     def onModelChanged(self, new_model):
         attrs = set([k for k, v in self._attribute_handlers.items() if v.autoAddEnabled()])
@@ -517,6 +520,67 @@ class PropertyEditor(QWidget):
         dir_path = QFileDialog.getExistingDirectory(self)
         Main.write_txt(dir_path, {defect}, 'defect')
 
+    def select_image(self):
+        image_types = ['*.jpg', '*.bmp', '*.png', '*.pgm', '*.ppm', '*.tiff', '*.tif', '*.gif']
+        format_str = ' '.join(image_types)
+        fname = QFileDialog.getOpenFileName(self, "select training source", '.',
+                                            "Media files (%s)" % (format_str,))
+        if fname is None or fname == '':
+            return
+        self.image_path = os.path.abspath(fname)
+        self._image_label.setText(os.path.basename(self.image_path))
+
+    def image2json(self, path):
+        temp = path.split('.')
+        return ''.join(temp[:-1]) + '.json'
+
+    def image2cpimage(self, path, id, length):
+        length = max(length, 5)
+        temp = path.split('.')
+        return ''.join(temp[:-1]) + str(id).zfill(length) + '.' + temp[-1]
+
+    # 判断是否包含瑕疵
+    def contains_defect(self, annotations, defect_type):
+        defects = set()
+        for annotation in annotations:
+            if 'class' in annotation:
+                defects.add(annotation['class'])
+        return defect_type.issubset(defects)
+
+    def generate(self):
+        image_path = self.image_path
+        if image_path is None:
+            return
+        image_path = os.path.basename(image_path)
+        directory = QFileDialog.getExistingDirectory(self)
+        defect = {self._train_combo_box.currentText()}
+        proportion = self._spin_box.value() / 100
+        shuffle = self._shuffle.checkState()
+        image_list = []
+        cnt = 1
+        for root, dirs, files in os.walk(directory):
+            for file in files:
+                if file == image_path:
+                    path = os.path.abspath(os.path.join(root, file))
+                    json_path = self.image2json(path)
+                    if not os.path.exists(json_path):
+                        continue
+                    with open(json_path, 'r') as f:
+                        temp = json5.load(f)
+                    for i in range(len(temp)):
+                        current_json = temp[i]
+                        if current_json['filename'] == image_path and \
+                                self.contains_defect(current_json['annotations'], defect):
+                            image_list.append([cnt, path, json_path])
+                            break
+        length = len(image_list)
+        for i, path, json_path in image_list:
+            dst_image_path = self.image2cpimage(os.path.join(directory, image_path), i, length)
+            print(path, dst_image_path)
+            shutil.copy(path, dst_image_path)
+        if shuffle == 1:
+            random.shuffle(image_list)
+
     # 从labeltool中设置搜索按钮
     def setFunction(self, func):
         self._search_btn.clicked.connect(func)
@@ -591,6 +655,7 @@ class PropertyEditor(QWidget):
             self._register('item', temp_json['attributes']['class'], temp_json['item'])
             # add_txt的下拉框里也要添加
             self.combo_box.addItem(temp_json['attributes']['class'])
+            self._train_combo_box.addItem(temp_json['attributes']['class'])
             # 写回json
             self.rewrite_json(temp_json)
         except Exception as e:
@@ -671,6 +736,37 @@ class PropertyEditor(QWidget):
         self._add_label_group_layout.addWidget(self.text_LineEdit, 3)
         self._add_label_group_layout.addWidget(self.attributes_add_btn, 4)
 
+        # 训练集
+        self._group_box_train = QGroupBox('训练数据生成')
+        self._train_layout = QVBoxLayout()
+        self._group_box_train.setLayout(self._train_layout)
+        # 训练源
+        self._image_layout = QtGui.QHBoxLayout()
+        self._image_label = QtGui.QLabel('')
+        self._image_btn = QPushButton('...')
+        self._image_btn.clicked.connect(self.select_image)
+        self._image_layout.addWidget(self._image_label)
+        self._image_layout.addWidget(self._image_btn)
+        # 缺陷选择
+        self._train_combo_box = QComboBox()
+        self._train_combo_box.addItems(items)
+        # 训练集占比
+        self._spin_box = QtGui.QSpinBox()
+        self._spin_box.setMaximum(100)
+        # 是否随机打乱
+        self._shuffle = QtGui.QCheckBox("随机")
+        # 选择文件夹
+        self._file_button = QPushButton('生成')
+        self._file_button.clicked.connect(self.generate)
+
+        self.temp_Widget = QWidget()
+        self.temp_Widget.setLayout(self._image_layout)
+        self._train_layout.addWidget(self.temp_Widget)
+        self._train_layout.addWidget(self._train_combo_box)
+        self._train_layout.addWidget(self._spin_box)
+        self._train_layout.addWidget(self._shuffle)
+        self._train_layout.addWidget(self._file_button)
+
         # Global widget
         self._layout = MyVBoxLayout()
         self.setLayout(self._layout)
@@ -679,3 +775,4 @@ class PropertyEditor(QWidget):
         self._layout.addWidget(self._group_box_add_label, 1)
         self._layout.addWidget(self._group_box, 2)
         self._layout.addWidget(self._group_box2, 3)
+        self._layout.addWidget(self._group_box_train, 4)
