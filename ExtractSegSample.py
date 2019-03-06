@@ -8,7 +8,7 @@ import simplejson as json
 
 def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='train.txt', test_name='test.txt',
                     index_name='index.txt', split_ratio=0.8, save_cnt=1, bshow=False, crop_ratio_lrtd=None,
-                    do_shuffle=True, only_defect=False, all_contain=True, config_path='config.json'):
+                    do_shuffle=True, only_defect=True, all_contain=False, config_path='config.json'):
     """
     将文件夹中所有的符合的图片的json转为图片，并按比例分割成训练集和测试集
     :param search_dir: 搜索路径
@@ -145,16 +145,18 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                 write_text = img_ful_filename
                 # 图片名字,图片扩展名
                 temp_json_name, image_ext = os.path.splitext(os.path.basename(write_text))
+                # 先给他5位
+                cnt_str = str.zfill(str(save_cnt), 5)
                 # json转换后的图片路径
-                save_label_path = os.path.join(save_dir, temp_json_name + str(save_cnt) + "_label" + image_ext)
+                save_label_path = os.path.join(save_dir, temp_json_name + cnt_str + "_label" + image_ext)
                 # 保存json转换后的图片
                 cv2.imwrite(save_label_path, label_img)
                 # 原始图片图片路径
-                save_src_path = os.path.join(save_dir, temp_json_name + str(save_cnt) + image_ext)
+                save_src_path = os.path.join(save_dir, temp_json_name + cnt_str + image_ext)
                 write_text = save_src_path
                 # 保存原始图片图片
                 cv2.imwrite(save_src_path, img)
-                findex.write(os.path.basename(write_text) + ' ' + root + '\n')
+                findex.write(os.path.basename(write_text) + ' ' + os.path.dirname(root) + '\n')
                 all_save_label_names.append(
                     os.path.basename(write_text) + "  " + os.path.basename(save_label_path) + '\n')
                 save_cnt += 1
