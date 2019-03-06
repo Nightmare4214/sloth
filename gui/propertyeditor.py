@@ -1,17 +1,13 @@
-import json
-import random
-import shutil
 import sys
-
 import json5
 import os
 import time
 import logging
-
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import pyqtSignal, QSize, Qt, QRegExp
 from PyQt4.QtGui import QWidget, QGroupBox, QVBoxLayout, QPushButton, QScrollArea, QLineEdit, QDoubleValidator, \
-    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor, QRegExpValidator, QDialog
+    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor, QRegExpValidator, QDialog, QListWidget, \
+    QListWidgetItem
 from sloth.annotations.container import AnnotationContainerFactory
 from sloth.core.exceptions import ImproperlyConfigured
 from sloth.annotations.model import AnnotationModelItem
@@ -310,6 +306,72 @@ class LabelEditor(QScrollArea):
         return self._insertion_mode
 
 
+# 复选下拉框
+class ComboCheckBox(QComboBox):
+    def __init__(self, items):
+        super(ComboCheckBox, self).__init__()
+        self.items = items
+        self.items.insert(0, '全部')
+        self.row_num = len(self.items)
+        self.Selectedrow_num = 0
+        self.qCheckBox = []
+        self.qLineEdit = QLineEdit()
+        self.qLineEdit.setReadOnly(True)
+        self.qListWidget = QListWidget()
+        self.addQCheckBox(0)
+        self.qCheckBox[0].stateChanged.connect(self.All)
+        for i in range(1, self.row_num):
+            self.addQCheckBox(i)
+            self.qCheckBox[i].stateChanged.connect(self.show)
+        self.setModel(self.qListWidget.model())
+        self.setView(self.qListWidget)
+        self.setLineEdit(self.qLineEdit)
+
+    def addQCheckBox(self, i):
+        self.qCheckBox.append(QtGui.QCheckBox())
+        qItem = QListWidgetItem(self.qListWidget)
+        self.qCheckBox[i].setText(self.items[i])
+        self.qListWidget.setItemWidget(qItem, self.qCheckBox[i])
+
+    def Selectlist(self):
+        Outputlist = set()
+        for i in range(1, self.row_num):
+            if self.qCheckBox[i].isChecked():
+                Outputlist.add(self.qCheckBox[i].text())
+        self.Selectedrow_num = len(Outputlist)
+        return Outputlist
+
+    def show(self):
+        show = ''
+        Outputlist = self.Selectlist()
+        self.qLineEdit.setReadOnly(False)
+        self.qLineEdit.clear()
+        for i in Outputlist:
+            show += i + ';'
+        if self.Selectedrow_num == 0:
+            self.qCheckBox[0].setCheckState(0)
+        elif self.Selectedrow_num == self.row_num - 1:
+            self.qCheckBox[0].setCheckState(2)
+        else:
+            self.qCheckBox[0].setCheckState(1)
+        self.qLineEdit.setText(show)
+        self.qLineEdit.setReadOnly(True)
+
+    def All(self, zhuangtai):
+        if zhuangtai == 2:
+            for i in range(1, self.row_num):
+                self.qCheckBox[i].setChecked(True)
+        elif zhuangtai == 1:
+            if self.Selectedrow_num == 0:
+                self.qCheckBox[0].setCheckState(2)
+        elif zhuangtai == 0:
+            self.clear()
+
+    def clear(self):
+        for i in range(self.row_num):
+            self.qCheckBox[i].setChecked(False)
+
+
 # 训练数据对话框
 class trainDialog(QDialog):
     def __init__(self, items, parent=None):
@@ -348,7 +410,7 @@ class trainDialog(QDialog):
         if search_dir is None or search_dir == '':
             return
         # 缺陷类型
-        defect = {self._train_combo_box.currentText()}
+        defect = self._train_combo_box.Selectlist()
         # 训练集所占比例
         split_ratio = self._spin_box.value() / 100
         # 是否打乱
@@ -380,7 +442,7 @@ class trainDialog(QDialog):
         # self._image_btn.clicked.connect(self.select_image)
         self._image_layout.addWidget(self._image_label)
         # self._image_layout.addWidget(self._image_btn)
-        # 彩图夹
+        # 采图夹
         self._collect_layout = QtGui.QHBoxLayout()
         self._collect_layout.addWidget(QtGui.QLabel('采图夹：'))
         self._collect_label = QtGui.QLabel('')
@@ -389,8 +451,8 @@ class trainDialog(QDialog):
         self._collect_layout.addWidget(self._collect_label)
         self._collect_layout.addWidget(self._collect_btn)
         # 缺陷选择
-        self._train_combo_box = QComboBox()
-        self._train_combo_box.addItems(items)
+        self._train_combo_box = ComboCheckBox(items)
+        # self._train_combo_box.addItems(items)
         # 训练集占比
         self._spin_box = QtGui.QDoubleSpinBox()
         self._spin_box.setMaximum(100)
