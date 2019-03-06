@@ -20,7 +20,7 @@ from sloth.gui.utils import MyVBoxLayout
 from sloth.utils.bind import bind
 import sloth.conf.default_config as cf
 import sloth.Main as Main
-import ExtractSegSample
+import sloth.ExtractSegSample as ex
 
 LOG = logging.getLogger(__name__)
 
@@ -315,6 +315,9 @@ class trainDialog(QDialog):
     def __init__(self, items, parent=None):
         super(trainDialog, self).__init__(parent)
         self.setupUi(items)
+        direct = os.path.dirname(sys.argv[0])
+        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+            self.conifg_path = f.read()
 
     # 选择图片
     def select_image(self):
@@ -327,94 +330,86 @@ class trainDialog(QDialog):
         self.image_path = os.path.abspath(fname)
         self._image_label.setText(os.path.basename(self.image_path))
 
-    # 获得图片路径对应的json路径
-    def image2json(self, path):
-        temp = path.split('.')
-        return ''.join(temp[:-1]) + '.json'
-
-    # 获得图片路径转成的训练图片路径
-    def image2cpimage(self, path, id, length):
-        length = max(length, 5)
-        temp = path.split('.')
-        return ''.join(temp[:-1]) + str(id).zfill(length) + '.' + temp[-1]
-
-    # 判断是否包含瑕疵
-    def contains_defect(self, annotations, defect_type):
-        defects = set()
-        for annotation in annotations:
-            if 'class' in annotation:
-                defects.add(annotation['class'])
-        return defect_type.issubset(defects)
+    # 选择目录
+    def select_directory(self):
+        directory = QFileDialog.getExistingDirectory(self)
+        if directory is None:
+            return
+        self._collect_label.setText(directory)
 
     # 生成训练数据
     def generate(self):
-        image_path = self.image_path
-        if image_path is None:
-            return
         # 训练源
-        image_path = os.path.basename(image_path)
+        search_name = self._image_label.text()
+        if search_name is None or search_name == '':
+            return
         # 生成目录
-        directory = QFileDialog.getExistingDirectory(self)
+        search_dir = self._collect_label.text()
+        if search_dir is None or search_dir == '':
+            return
         # 缺陷类型
         defect = {self._train_combo_box.currentText()}
         # 训练集所占比例
-        proportion = self._spin_box.value() / 100
+        split_ratio = self._spin_box.value() / 100
         # 是否打乱
-        shuffle = self._shuffle.checkState()
-        # 图片信息(id，图片路径，json路径)
-        image_list = []
-        # id
-        cnt = 1
-        # 遍历
-        for root, dirs, files in os.walk(directory):
-            for file in files:
-                if file == image_path:
-                    path = os.path.abspath(os.path.join(root, file))
-                    json_path = self.image2json(path)
-                    if not os.path.exists(json_path):
-                        continue
-                    with open(json_path, 'r') as f:
-                        temp = json5.load(f)
-                    for i in range(len(temp)):
-                        current_json = temp[i]
-                        if current_json['filename'] == image_path and \
-                                self.contains_defect(current_json['annotations'], defect):
-                            image_list.append([cnt, path, json_path])
-                            break
-        length = len(image_list)
-        for i, path, json_path in image_list:
-            dst_image_path = self.image2cpimage(os.path.join(directory, image_path), i, length)
-            print(path, dst_image_path)
-            shutil.copy(path, dst_image_path)
-        if shuffle == 1:
-            random.shuffle(image_list)
+        do_shuffle = self._shuffle.isChecked()
+        save_dir = QFileDialog.getExistingDirectory(self)
+        if save_dir == '':
+            return
+        print('search_name', search_name)
+        print('search_dir', search_dir)
+        print('defect', defect)
+        print('split_ratio', split_ratio)
+        print('do_shuffle', do_shuffle)
+        print('save_dir', save_dir)
+        print('config_path', self.conifg_path)
+        ex.generate_sample(search_dir, search_name, save_dir, defect, split_ratio=split_ratio, do_shuffle=do_shuffle,
+                           config_path=self.conifg_path)
 
     def setupUi(self, items):
+        self.setWindowTitle('训练数据生成')
         self._train_layout = QVBoxLayout()
         self.setLayout(self._train_layout)
 
         # 训练源
         self._image_layout = QtGui.QHBoxLayout()
-        self._image_label = QtGui.QLabel('')
-        self._image_btn = QPushButton('...')
-        self._image_btn.clicked.connect(self.select_image)
+        self._image_layout.addWidget(QtGui.QLabel('训练源：'))
+        self._image_label = QLineEdit('test.jpg')
+        # self._image_label = QtGui.QLabel('')
+        # self._image_btn = QPushButton('...')
+        # self._image_btn.clicked.connect(self.select_image)
         self._image_layout.addWidget(self._image_label)
-        self._image_layout.addWidget(self._image_btn)
+        # self._image_layout.addWidget(self._image_btn)
+        # 彩图夹
+        self._collect_layout = QtGui.QHBoxLayout()
+        self._collect_layout.addWidget(QtGui.QLabel('采图夹：'))
+        self._collect_label = QtGui.QLabel('')
+        self._collect_btn = QPushButton('...')
+        self._collect_btn.clicked.connect(self.select_directory)
+        self._collect_layout.addWidget(self._collect_label)
+        self._collect_layout.addWidget(self._collect_btn)
         # 缺陷选择
         self._train_combo_box = QComboBox()
         self._train_combo_box.addItems(items)
         # 训练集占比
-        self._spin_box = QtGui.QSpinBox()
+        self._spin_box = QtGui.QDoubleSpinBox()
         self._spin_box.setMaximum(100)
+        self._spin_box.setValue(80.0)
         # 是否随机打乱
         self._shuffle = QtGui.QCheckBox("随机")
         # 选择文件夹
         self._file_button = QPushButton('生成')
         self._file_button.clicked.connect(self.generate)
 
+        # 加入训练源
         self.temp_Widget = QWidget()
         self.temp_Widget.setLayout(self._image_layout)
         self._train_layout.addWidget(self.temp_Widget)
+        # 加入采图夹
+        self.collect_Widget = QWidget()
+        self.collect_Widget.setLayout(self._collect_layout)
+        self._train_layout.addWidget(self.collect_Widget)
+
         self._train_layout.addWidget(self._train_combo_box)
         self._train_layout.addWidget(self._spin_box)
         self._train_layout.addWidget(self._shuffle)
@@ -665,7 +660,7 @@ class PropertyEditor(QWidget):
 
     # 生成训练数据
     def generate(self):
-        a=trainDialog(self.items,self)
+        a = trainDialog(self.items, self)
         a.exec_()
 
     # 从labeltool中设置搜索按钮
