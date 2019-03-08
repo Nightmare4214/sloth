@@ -1,5 +1,4 @@
 import math
-from PyQt4.QtGui import *
 from PyQt4.Qt import *
 
 
@@ -116,8 +115,8 @@ class RectItemInserter(ItemInserter):
             horizontalHelpLine.setPen(self._helpLinesPen)
             verticalHelpLine.setPen(self._helpLinesPen)
 
-            group.addToGroup(verticalHelpLine);
-            group.addToGroup(horizontalHelpLine);
+            group.addToGroup(verticalHelpLine)
+            group.addToGroup(horizontalHelpLine)
 
             self._scene.addItem(self._helpLines)
         else:
@@ -437,11 +436,11 @@ class PolygonItemInserter(ItemInserter):
         print('uKey', uKey)
         if (uKey == Qt.Key_Z + Qt.Key_Control) \
             and self._item is not None:
-                polygon = self._item.polygon()
-                if polygon.size() == 1:
-                    event.ignore()
-                polygon = polygon[0:-1]
-                self._item.setPolygon(polygon)
+            polygon = self._item.polygon()
+            if polygon.size() == 1:
+                event.ignore()
+            polygon = polygon[0:-1]
+            self._item.setPolygon(polygon)
 
     def abort(self):
         if self._item is not None:

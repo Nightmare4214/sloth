@@ -5,16 +5,16 @@ import functools
 import logging
 import os
 import platform
+import sys
 
 import PyQt4.uic as uic
+import json5
 import sloth.Main as Main
 from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import SIGNAL, QSettings, QSize, QPoint, QVariant, QFileInfo, QTimer, pyqtSignal, QObject, Qt, \
-    QPointF, QEvent, QRectF
+from PyQt4.QtCore import QSettings, QSize, QPoint, QVariant, QFileInfo, QTimer, pyqtSignal, QObject, Qt
 from PyQt4.QtGui import QMainWindow, QSizePolicy, QWidget, QVBoxLayout, QAction, \
     QKeySequence, QLabel, QItemSelectionModel, QMessageBox, QFileDialog, QFrame, \
-    QDockWidget, QProgressBar, QProgressDialog, QCursor, QMenu, QGraphicsPolygonItem, QMouseEvent, QApplication, \
-    QGraphicsEllipseItem
+    QDockWidget, QProgressBar, QProgressDialog, QCursor, QGraphicsPolygonItem
 from sloth import APP_NAME, ORGANIZATION_DOMAIN
 from sloth.annotations.container import AnnotationContainerFactory
 from sloth.annotations.model import AnnotationTreeView, FrameModelItem, ImageFileModelItem, CopyAnnotations, \
@@ -28,6 +28,7 @@ from sloth.gui.frameviewer import GraphicsView
 from sloth.gui.propertyeditor import PropertyEditor
 from sloth.utils.bind import bind, compose_noargs
 import sloth.conf.default_config as cf
+from sloth.items import items
 
 GUIDIR = os.path.join(os.path.dirname(__file__))
 
@@ -87,7 +88,22 @@ class MainWindow(QMainWindow):
         self.loadApplicationSettings()
         self.onAnnotationsLoaded()
 
-        self._point_dir = {}
+        self._item_dir = {}
+
+    def load_json(self):
+        # 获取这次配置文件的路径
+        direct = os.path.dirname(sys.argv[0])
+        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+            label_path = f.read()
+        temp = []
+        try:
+            with open(label_path, 'r') as f:
+                temp = json5.load(f)
+        except Exception as e:
+            temp = []
+        finally:
+            LABELS = temp
+        return LABELS
 
     # Slots
     def onPluginLoaded(self, action):
@@ -511,7 +527,7 @@ class MainWindow(QMainWindow):
                             break
                         # 判断filename在json中
                         if 'filename' in current_json and \
-                                set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
+                            set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
                             # 绝对路径
                             filename = os.path.abspath(os.path.join(root, current_json['filename']))
                             # 相对路径
@@ -534,7 +550,7 @@ class MainWindow(QMainWindow):
         # 删除临时的json
         os.remove(temp_json_path)
 
-    # 重做多边形，按照点撤回，如ABCDE->ABCD
+    # 撤回多边形，按照点撤回，如ABCDE->ABCD
     def undo_polygon(self, model_index):
         if model_index.parent().data() is None:
             return
@@ -584,50 +600,58 @@ class MainWindow(QMainWindow):
             # inserter._item = None
             # inserter.inserterFinished.emit()
 
-    # 撤回，只撤回点
+    # 撤回
     def undo(self):
-        print('faQ_1')
         a = self.treeview.currentIndex()
-        # 判断有没有父亲
+        # 找他祖先
         while a.parent().data() is not None:
             a = a.parent()
-        point_children = []
         i = 0
-        temp_conf = cf.LABELS
+        last_child = None
         while True:
             child = a.child(i, 0)
             if child.data() is None:
                 break
-            else:
-                for current_json in temp_conf:
-                    # 获得类型
-                    temp_attribute_class = current_json['attributes']['class']
-                    # 获得类型
-                    temp_type = current_json["item"]
-                    if child.data() == temp_attribute_class:
-                        # 点才有撤回功能
-                        if temp_type == "sloth.items.PointItem":
-                            point_children.append(child)
-                        break
+            last_child = child
             i += 1
-        if len(point_children) == 0:
+        if last_child is None:
             return
+        i = 0
+        data = []
+        while last_child.child(i, 1).data() is None:
+            child = last_child.child(i, 1)
+            data.append(child.data())
+            i += 1
         annotations = self.labeltool.annotations()
         if a.row() < 0:
             return
+        # 获得文件
         open_path = annotations[a.row()]['filename']
-        if open_path not in self._point_dir:
-            self._point_dir[open_path] = []
-
-        self._point_dir[open_path].append((temp_attribute_class, QPointF(point_children[-1].child(0, 1).data(),
-                                                                         point_children[-1].child(1, 1).data())))
-        self.treeview.setCurrentIndex(point_children[-1])
-        print(a == self.treeview.currentIndex())
+        # 给文件加撤回列表
+        if open_path not in self._item_dir:
+            self._item_dir[open_path] = []
+        print(last_child.data())
+        print(last_child.child(0, 1).data())
+        print(last_child.child(1, 1).data())
+        self.treeview.setCurrentIndex(last_child)
+        config = self.load_json()
+        item_type = None
+        for current_json in config:
+            if current_json['attributes']['class'] == last_child.data():
+                item_type = current_json['item']
+                break
+        for item in self.scene.selectedItems():
+            if item_type == 'sloth.items.PointItem':
+                data = item._point
+            elif item_type == 'sloth.items.RectItem':
+                data = item._rect
+            elif item_type == 'sloth.items.PolygonItem':
+                data = item._polygon
+        self._item_dir[open_path].append([last_child.data(), item_type, data])
         self.scene.deleteSelectedItems()
         self.treeview.setCurrentIndex(a)
-        print(self._point_dir)
 
-    # 重做（相当于ctrl+y或者ctrl+shift+z)，只重做点
+    # 重做（相当于ctrl+y或者ctrl+shift+z)
     def redo(self):
         print('faQ_2')
         a = self.treeview.currentIndex()
@@ -636,34 +660,56 @@ class MainWindow(QMainWindow):
             a = a.parent()
         annotations = self.labeltool.annotations()
         if a.row() < 0:
+            self.treeview.setCurrentIndex(a)
             return
         open_path = annotations[a.row()]['filename']
-        if open_path not in self._point_dir or len(self._point_dir[open_path]) == 0:
+        if open_path not in self._item_dir or len(self._item_dir[open_path]) == 0:
             return
-        attribute_class = self._point_dir[open_path][-1][0]
+        attribute_class = self._item_dir[open_path][-1][0]
+        item_type = self._item_dir[open_path][-1][1]
+        data = self._item_dir[open_path][-1][2]
         print('attribute_class', attribute_class)
         if attribute_class == '' or attribute_class is None:
             return
+        if item_type is None:
+            return
         self.property_editor._class_buttons[attribute_class].click()
-        pos = self._point_dir[open_path][-1][1]
         inserter = self.scene._inserter
         inserter._ann['class'] = attribute_class
         inserter._ann[None] = None
-        inserter._ann.update({
-            inserter._prefix + 'x': pos.x(),
-            inserter._prefix + 'y': pos.y()})
-        inserter._ann.update(inserter._default_properties)
-        if inserter._commit:
-            self.scene._image_item.addAnnotation(inserter._ann)
-        inserter._item = QGraphicsEllipseItem(QRectF(pos.x() - 2,
-                                                     pos.y() - 2, 5, 5))
-        inserter._item.setPen(inserter.pen())
+        if item_type == 'sloth.items.PointItem':
+            inserter._ann.update({
+                inserter._prefix + 'x': data.x(),
+                inserter._prefix + 'y': data.y()})
+            inserter._ann.update(inserter._default_properties)
+            if inserter._commit:
+                self.scene._image_item.addAnnotation(inserter._ann)
+        elif item_type == 'sloth.items.RectItem':
+            rect = data
+            inserter._ann.update({inserter._prefix + 'x': rect.x(),
+                                  inserter._prefix + 'y': rect.y(),
+                                  inserter._prefix + 'width': rect.width(),
+                                  inserter._prefix + 'height': rect.height()})
+            inserter._ann.update(inserter._default_properties)
+            if inserter._commit:
+                self.scene._image_item.addAnnotation(inserter._ann)
+            inserter.annotationFinished.emit()
+            inserter._init_pos = None
+            inserter._aiming = True
+            self.scene.views()[0].viewport().setCursor(Qt.CrossCursor)
+        elif item_type == 'sloth.items.PolygonItem':
+            polygon = data
+            inserter._item = QGraphicsPolygonItem(polygon)
+            inserter._updateAnnotation()
+            if inserter._commit:
+                self.scene._image_item.addAnnotation(inserter._ann)
+            inserter._item = None
         inserter.annotationFinished.emit()
         self.property_editor._class_buttons[attribute_class].click()
-        if len(self._point_dir[open_path]) == 1:
-            self._point_dir[open_path] = []
+        if len(self._item_dir[open_path]) == 1:
+            self._item_dir[open_path] = []
         else:
-            self._point_dir[open_path] = self._point_dir[open_path][0:-1]
+            self._item_dir[open_path] = self._item_dir[open_path][0:-1]
 
     def connectActions(self):
         ## File menu

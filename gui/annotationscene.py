@@ -1,5 +1,7 @@
 """This is the AnnotationScene module"""
-from PyQt4 import QtCore, QtGui
+import os
+import sys
+import json5
 from sloth.items import *
 from sloth.core.exceptions import InvalidArgumentException
 from sloth.annotations.model import AnnotationModelItem
@@ -31,6 +33,7 @@ class AnnotationScene(QGraphicsScene):
         except:
             self.setBackgroundBrush(Qt.darkGray)
         self.reset()
+        self.color_dir = {}
 
     def add_label(self, _type, label_type, item):
         if _type == 'inserter':
@@ -137,6 +140,32 @@ class AnnotationScene(QGraphicsScene):
         self._labeltool.exitInsertMode()
         self._inserter = None
 
+    def get_color_brush_by_label_class(self, label_class):
+        # 获取这次配置文件的路径
+        direct = os.path.dirname(sys.argv[0])
+        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+            label_path = f.read()
+        temp = []
+        try:
+            with open(label_path, 'r') as f:
+                temp = json5.load(f)
+        except Exception as e:
+            temp = []
+            print(e)
+        finally:
+            LABELS = temp
+        for current_json in LABELS:
+            try:
+                if current_json['attributes']['class'] == label_class:
+                    temp_color = map(int, current_json['color'].split(','))
+                    temp_brush = current_json['brush']
+                    return QColor(*temp_color), int(temp_brush)
+            except Exception as e:
+                print(e)
+                continue
+
+        return QColor(255, 255, 0), 0
+
     def onInsertionModeStarted(self, label_class):
         # Abort current inserter
         if self._inserter is not None:
@@ -145,6 +174,7 @@ class AnnotationScene(QGraphicsScene):
 
         # Add new inserter
         default_properties = self._labeltool.propertyeditor().currentEditorProperties()
+        items.my_color, items.my_brush = self.get_color_brush_by_label_class(label_class)
         inserter = self._inserterfactory.create(label_class, self._labeltool, self, default_properties)
         if inserter is None:
             raise InvalidArgumentException("Could not find inserter for class '%s' with default properties '%s'" % (
@@ -189,7 +219,7 @@ class AnnotationScene(QGraphicsScene):
         LOG.debug("mousePressEvent %s %s" % (self.sceneRect().contains(event.scenePos()), event.scenePos()))
         if self._inserter is not None:
             if not self.sceneRect().contains(event.scenePos()) and \
-                    not self._inserter.allowOutOfSceneEvents():
+                not self._inserter.allowOutOfSceneEvents():
                 # ignore events outside the scene rect
                 return
             # insert mode
@@ -202,7 +232,7 @@ class AnnotationScene(QGraphicsScene):
         LOG.debug("mouseDoubleClickEvent %s %s" % (self.sceneRect().contains(event.scenePos()), event.scenePos()))
         if self._inserter is not None:
             if not self.sceneRect().contains(event.scenePos()) and \
-                    not self._inserter.allowOutOfSceneEvents():
+                not self._inserter.allowOutOfSceneEvents():
                 # ignore events outside the scene rect
                 return
             # insert mode

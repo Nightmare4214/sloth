@@ -478,6 +478,26 @@ class trainDialog(QDialog):
         self._train_layout.addWidget(self._file_button)
 
 
+brush2idx = {'Qt.NoBrush': 0,
+             'Qt.SolidPattern': 1,
+             'Qt.Dense1Pattern': 2,
+             'Qt.Dense2Pattern': 3,
+             'Qt.Dense3Pattern': 4,
+             'Qt.Dense4Pattern': 5,
+             'Qt.Dense5Pattern': 6,
+             'Qt.Dense6Pattern': 7,
+             'Qt.Dense7Pattern': 8,
+             'Qt.HorPattern': 9,
+             'Qt.VerPattern': 10,
+             'Qt.CrossPattern': 11,
+             'Qt.BDiagPattern': 12,
+             'Qt.FDiagPattern': 13,
+             'Qt.DiagCrossPattern': 14,
+             'Qt.LinearGradientPattern': 15,
+             'Qt.RadialGradientPattern': 16,
+             'Qt.ConicalGradientPattern': 17}
+
+
 class PropertyEditor(QWidget):
     # Signals
     insertionModeStarted = pyqtSignal(str)
@@ -673,7 +693,7 @@ class PropertyEditor(QWidget):
     def startEditMode(self, model_items):
         # If we're in insertion mode, ignore empty edit requests
         if self._label_editor is not None and self._label_editor.insertionMode() \
-                and len(model_items) == 0:
+            and len(model_items) == 0:
             return
 
         self.endInsertionMode()
@@ -783,9 +803,14 @@ class PropertyEditor(QWidget):
         attributes_item, attributes_inserter = type_dict[self.attributes_type.currentText()]
         attributes_hotkey = self.hotkey.text()
         attributes_text = self.text_LineEdit.text()
+        global brush2idx
+        brush_idx = str(brush2idx[self.brush_combo_box.currentText()])
         temp_json = {'attributes': attributes, 'inserter': attributes_inserter,
                      'item': attributes_item,
+                     'color': ','.join(map(str, self.color_info)),
+                     'brush': brush_idx,
                      'text': attributes_text}
+
         # 快捷键
         if attributes_hotkey is not None and attributes_hotkey != '':
             temp_json['hotkey'] = attributes_hotkey
@@ -799,12 +824,20 @@ class PropertyEditor(QWidget):
             self._register('item', temp_json['attributes']['class'], temp_json['item'])
             # add_txt的下拉框里也要添加
             self.combo_box.addItem(temp_json['attributes']['class'])
-            self._train_combo_box.addItem(temp_json['attributes']['class'])
             self.items.append(temp_json['attributes']['class'])
+            cf.LABELS.append(temp_json)
             # 写回json
             self.rewrite_json(temp_json)
         except Exception as e:
             print(e)
+
+    # 颜色对话框
+    def color_dialog(self):
+        col = QtGui.QColorDialog.getColor()
+        if col.isValid():
+            self.color_label.setStyleSheet("QWidget { background-color: %s }"
+                                           % col.name())
+        self.color_info = col.getRgb()[:-1]
 
     def _setupGUI(self):
         self._class_buttons = {}
@@ -871,15 +904,34 @@ class PropertyEditor(QWidget):
         # 标签显示
         self.text_LineEdit = QLineEdit('')
         self.text_LineEdit.setPlaceholderText('text')
+        # 颜色
+        color = QtGui.QColor(0, 0, 0)
+        self.color_label = QtGui.QWidget()
+        self.color_label.setStyleSheet("QWidget { background-color: %s }"
+                                       % color.name())
+        self.color_info = [0, 0, 0]
+        self.color_layout = QtGui.QHBoxLayout()
+        self.color_btn = QPushButton('选择颜色')
+        self.color_btn.clicked.connect(self.color_dialog)
+        self.color_layout.addWidget(self.color_label)
+        self.color_layout.addWidget(self.color_btn)
+        # 笔刷
+        global brush2idx
+        self.brush_combo_box = QComboBox()
+        self.brush_combo_box.addItems(list(brush2idx.keys()))
         # 按钮
         self.attributes_add_btn = QPushButton('添加标签')
         self.attributes_add_btn.clicked.connect(self.add_attributes)
-        # 假如控件
+        # 加入控件
         self._add_label_group_layout.addWidget(self.attributes_LineEdit, 0)
         self._add_label_group_layout.addWidget(self.attributes_type, 1)
         self._add_label_group_layout.addWidget(self.hotkey, 2)
         self._add_label_group_layout.addWidget(self.text_LineEdit, 3)
-        self._add_label_group_layout.addWidget(self.attributes_add_btn, 4)
+        self._label_widget = QWidget()
+        self._label_widget.setLayout(self.color_layout)
+        self._add_label_group_layout.addWidget(self._label_widget, 4)
+        self._add_label_group_layout.addWidget(self.brush_combo_box, 5)
+        self._add_label_group_layout.addWidget(self.attributes_add_btn, 6)
 
         # 生成训练数据按钮
         self._file_button = QPushButton('生成训练数据')
