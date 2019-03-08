@@ -120,6 +120,7 @@ class AnnotationScene(QGraphicsScene):
                 LOG.debug(
                     'Could not find key class in annotation item. Skipping this item. Please check your label file.')
                 continue
+            items.my_color, items.my_brush = self.get_color_brush_by_label_class(label_class)
             item = self._itemfactory.create(label_class, child)
             if item is not None:
                 self.addItem(item)
