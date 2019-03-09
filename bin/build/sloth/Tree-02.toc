@@ -1,5 +1,0 @@
-('d:\\anaconda3\\lib\\site-packages\\pywin32_ctypes-0.2.0-py3.6.egg',
- None,
- {'*.cp36-win_amd64.pyd', '*.pyc', 'EGG-INFO', '*.py', '*.pyd', '*.pyw'},
- 'DATA',
- [])
