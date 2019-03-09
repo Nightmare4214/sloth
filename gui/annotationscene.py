@@ -165,7 +165,7 @@ class AnnotationScene(QGraphicsScene):
                 print(e)
                 continue
 
-        return QColor(255, 255, 0), 0
+        return QColor(255, 255, 0), 1
 
     def onInsertionModeStarted(self, label_class):
         # Abort current inserter

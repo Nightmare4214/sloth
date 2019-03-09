@@ -544,7 +544,6 @@ class PropertyEditor(QWidget):
 
     # 删除标签
     def remove_item(self, label_class):
-        print(label_class)
         try:
             # 删除
             if label_class in self._class_shortcuts:
@@ -573,7 +572,9 @@ class PropertyEditor(QWidget):
                                 self.combo_box.removeItem(i)
                                 self.items.pop(i)
                                 break
+                        self._class_buttons.pop(label_class)
                         break
+
                 with open(label_path, 'w') as f:
                     json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
 
