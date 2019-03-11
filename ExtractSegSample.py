@@ -150,12 +150,14 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                 # json转换后的图片路径
                 save_label_path = os.path.join(save_dir, temp_json_name + cnt_str + "_label" + image_ext)
                 # 保存json转换后的图片
-                cv2.imwrite(save_label_path, label_img)
+                # cv2.imwrite(save_label_path, label_img)
+                cv2.imencode(image_ext, label_img)[1].tofile(save_label_path)
                 # 原始图片图片路径
                 save_src_path = os.path.join(save_dir, temp_json_name + cnt_str + image_ext)
                 write_text = save_src_path
                 # 保存原始图片图片
-                cv2.imwrite(save_src_path, img)
+                # cv2.imwrite(save_src_path, img)
+                cv2.imencode(image_ext, img)[1].tofile(save_src_path)
                 findex.write(os.path.basename(write_text) + ' ' + os.path.dirname(root) + '\n')
                 all_save_label_names.append(
                     os.path.basename(write_text) + "  " + os.path.basename(save_label_path) + '\n')
@@ -188,7 +190,7 @@ if __name__ == '__main__':
     # search_name = r'merge_Y84PD46173061.bmp'
     # save_dir = r'E:\sloth_test\test1'
     # generate_sample(search_dir, search_name, save_dir, {'Face'}, split_ratio=0.8, do_shuffle=True)
-    search_dir = r'D:\迅雷\迅雷下载\新建文件夹\新建文件夹'
-    search_name = r'test.jpg'
-    save_dir = r'E:\sloth_test'
+    search_dir = r'E:\tmp\测试图集示例'
+    search_name = r'body_rgb_img.bmp'
+    save_dir = r'E:\sloth_test\新建文件夹'
     generate_sample(search_dir, search_name, save_dir, {'Face'}, split_ratio=1.0, do_shuffle=True, config_path=fname)
