@@ -5,7 +5,8 @@ block_cipher = None
 
 a = Analysis(['sloth'],
              pathex=['E:\\sloth\\bin'],
-             binaries=[],
+             binaries=[('D:\\api-ms-win-downlevel-shlwapi-l1-1-0.dll', '.'),
+                       ('D:\\IEShims.dll', '.')],
              datas=[('E:\\sloth\\gui\\labeltool.ui','sloth\\gui\\'),
                     ('E:\\sloth\\gui\\icons.qrc','sloth\\gui\\'),
                     ('E:\\sloth\\gui\\icons\\*','sloth\\gui\\icons\\'),
