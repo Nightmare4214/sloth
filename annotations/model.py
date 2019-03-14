@@ -794,6 +794,7 @@ class AnnotationSortFilterProxyModel(QSortFilterProxyModel):
 class AnnotationTreeView(QTreeView):
     selectedItemsChanged = pyqtSignal(object)
 
+    # 通过labeltool来设置右键打开图片所在文件夹
     def set_openDirectory(self, openDirectory):
         self.contextMenu = QtGui.QMenu(self)
         self.actionA = self.contextMenu.addAction('打开文件所在文件夹')
@@ -801,18 +802,12 @@ class AnnotationTreeView(QTreeView):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.showContextMenu)
 
+    # 设置右键菜单所在位置
     def showContextMenu(self):
         self.contextMenu.exec_(QCursor.pos())
 
     def __init__(self, parent=None):
         super(AnnotationTreeView, self).__init__(parent)
-        '''
-        self.connect(self, SIGNAL("clicked(QModelIndex)"), self.getCurrentIndex)  # 将click信号与getCurrentIndex函数绑定
-
-            def getCurrentIndex(self, index):
-                QtGui.QMessageBox.warning(None, "treeview select",
-                                          str(index.internalPointer().itemData[0]))
-        '''
 
         self.setUniformRowHeights(True)
         self.setSelectionMode(QTreeView.ExtendedSelection)

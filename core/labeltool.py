@@ -226,6 +226,7 @@ class LabelTool(QObject):
     def loadAnnotations(self, fname, handleErrors=True):
         fname = str(fname)  # convert from QString
         print('load', fname)
+        # self._container_factory <sloth.annotations.container.AnnotationContainerFactory object>
         try:
             self._container = self._container_factory.create(fname)
             self._model = AnnotationModel(self._container.load(fname))
@@ -236,7 +237,6 @@ class LabelTool(QObject):
                 msg = "Error: Loading failed (%s)" % str(e)
             else:
                 raise
-
         self.statusMessage.emit(msg)
         self.annotationsLoaded.emit()
 

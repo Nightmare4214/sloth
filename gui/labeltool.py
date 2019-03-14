@@ -253,15 +253,20 @@ class MainWindow(QMainWindow):
             self.ui.menuAnnotation.addAction(action)
             self.annotationMenu[a] = action
 
+    # 获得到image级别
+    def to_image(self):
+        temp = self.treeview.currentIndex()
+        while temp.parent().data() is not None:
+            temp = temp.parent()
+        return temp
+
     # 设置右键的菜单位置
     def showContextMenu(self):
         self.contextMenu.exec_(QCursor.pos())
 
     # 打开文件所在路径
     def openDirectory(self):
-        a = self.treeview.currentIndex()
-        while a.parent().data() is not None:
-            a = a.parent()
+        a = self.to_image()
         # while a.parent
         annotations = self.labeltool.annotations()
         if a.row() < 0:
@@ -278,6 +283,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             print(e)
 
+    # 搜索文件
     def search_file(self):
         key_word = self.property_editor.get_key_word()
         extension = self.property_editor.get_extension()
@@ -527,7 +533,7 @@ class MainWindow(QMainWindow):
                             break
                         # 判断filename在json中
                         if 'filename' in current_json and \
-                            set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
+                                set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
                             # 绝对路径
                             filename = os.path.abspath(os.path.join(root, current_json['filename']))
                             # 相对路径
@@ -602,10 +608,7 @@ class MainWindow(QMainWindow):
 
     # 撤回
     def undo(self):
-        a = self.treeview.currentIndex()
-        # 找他祖先
-        while a.parent().data() is not None:
-            a = a.parent()
+        a = self.to_image()
         i = 0
         last_child = None
         while True:
@@ -653,11 +656,7 @@ class MainWindow(QMainWindow):
 
     # 重做（相当于ctrl+y或者ctrl+shift+z)
     def redo(self):
-        print('faQ_2')
-        a = self.treeview.currentIndex()
-        # 判断有没有父亲
-        while a.parent().data() is not None:
-            a = a.parent()
+        a = self.to_image()
         annotations = self.labeltool.annotations()
         if a.row() < 0:
             self.treeview.setCurrentIndex(a)
