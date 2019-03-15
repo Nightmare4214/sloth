@@ -8,7 +8,8 @@ import simplejson as json
 
 def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='train.txt', test_name='test.txt',
                     index_name='index.txt', split_ratio=0.8, save_cnt=1, bshow=False, crop_ratio_lrtd=None,
-                    do_shuffle=True, only_defect=True, all_contain=False, config_path='config.json'):
+                    do_shuffle=True, only_defect=True, all_contain=False, config_path='config.json',
+                    multiply_flag=True):
     """
     将文件夹中所有的符合的图片的json转为图片，并按比例分割成训练集和测试集
     :param search_dir: 搜索路径
@@ -26,6 +27,7 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
     :param only_defect 只画defect中的缺陷类型
     :param all_contain 图片必须包含所有的要求缺陷
     :param config_path 配置文件路径
+    :param multiply_flag: 像素放大
     """
     if split_ratio > 1 or split_ratio < 0:
         return
@@ -113,17 +115,19 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                 #     blured_img = cv2.medianBlur(img, 5)
                 #     return blured_img
                 # img = filter_img(img)
-
+                print('this is a version')
                 # 黑底图片
                 label_img = np.zeros((img.shape[:2]), np.uint8)
+                r = list(zip(labels, contours))
+                r = sorted(r, key=lambda t: idx2type[t[0]])
                 # 画图
-                for i in range(len(contours)):
-                    if idx2type[labels[i]] == 'PolygonItem':
-                        cv2.drawContours(label_img, [contours[i]], -1, (labels[i]), -1)
-                    elif idx2type[labels[i]] == 'PointItem':
-                        cv2.circle(label_img, contours[i], 4, (labels[i]), -1)
-                    elif idx2type[labels[i]] == 'RectItem':
-                        cv2.rectangle(label_img, contours[i][0], contours[i][1], (labels[i]), -1)
+                for i, j in r:
+                    if idx2type[i] == 'PolygonItem':
+                        cv2.drawContours(label_img, [j], -1, i, -1)
+                    elif idx2type[i] == 'PointItem':
+                        cv2.circle(label_img, j, 4, i, -1)
+                    elif idx2type[i] == 'RectItem':
+                        cv2.rectangle(label_img, j[0], j[1], i, -1)
                 # 裁剪
                 if crop_ratio_lrtd is not None and len(crop_ratio_lrtd) == 4:
                     sx, sy = int(crop_ratio_lrtd[0] * label_img.shape[1]), int(
@@ -132,7 +136,8 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                         (1.0 - crop_ratio_lrtd[3]) * label_img.shape[0])
                     img, label_img = img[sy:ey, sx:ex], label_img[sy:ey, sx:ex]
                 # 乘完看起来就不是全黑的
-                label_img = label_img * (255 / max(class2label.values()))
+                if multiply_flag:
+                    label_img = label_img * (255 / max(class2label.values()))
                 # 显示图片
                 if bshow:
                     cv2.namedWindow('img', cv2.WINDOW_NORMAL)
