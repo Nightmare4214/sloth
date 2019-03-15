@@ -855,6 +855,7 @@ class MainWindow(QMainWindow):
             for pattern in image_types:
                 if fnmatch.fnmatch(fname.lower(), pattern):
                     item = self.labeltool.addImageFile(fname)
+                    break
 
             progress_bar.setValue(c)
 
