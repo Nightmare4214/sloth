@@ -43,9 +43,12 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
     class2label = {}
     # id转为类型
     idx2type = {}
-    for i, current_json in enumerate(json_conf):
-        class2label[current_json['attributes']['class']] = i + 1
-        idx2type[i + 1] = current_json['item'].split('.')[-1]
+    class2item = {}
+    for current_json in json_conf:
+        class2item[current_json['attributes']['class']] = current_json['item'].split('.')[-1]
+    for i, lab in enumerate(defect):
+        idx2type[i + 1] = class2item[lab]
+        class2label[lab] = i+1
     if crop_ratio_lrtd is None:
         crop_ratio_lrtd = []
     # 目录不存在，则创建
