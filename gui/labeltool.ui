@@ -51,7 +51,16 @@
     <property name="title">
      <string>&amp;Views</string>
     </property>
+    <widget class="QMenu" name="menu">
+     <property name="title">
+      <string>隐藏</string>
+     </property>
+     <addaction name="actionAdd_label"/>
+     <addaction name="actionAdd_txt"/>
+     <addaction name="actionAdd_files"/>
+    </widget>
     <addaction name="actionLocked"/>
+    <addaction name="menu"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -341,6 +350,33 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Z</string>
+   </property>
+  </action>
+  <action name="actionAdd_label">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>添加标签</string>
+   </property>
+  </action>
+  <action name="actionAdd_txt">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>add_txt</string>
+   </property>
+  </action>
+  <action name="actionAdd_files">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>add_files</string>
    </property>
   </action>
  </widget>

@@ -4,6 +4,7 @@ import random
 import cv2
 import numpy as np
 import simplejson as json
+import shutil
 
 
 def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='train.txt', test_name='test.txt',
@@ -48,7 +49,7 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
         class2item[current_json['attributes']['class']] = current_json['item'].split('.')[-1]
     for i, lab in enumerate(defect):
         idx2type[i + 1] = class2item[lab]
-        class2label[lab] = i+1
+        class2label[lab] = i + 1
     if crop_ratio_lrtd is None:
         crop_ratio_lrtd = []
     # 目录不存在，则创建
@@ -192,13 +193,86 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
     ftest.close()
 
 
+def generate_jpg(json_file, save_dir, config_path='config.json'):
+    """
+    将json花在对应的图片上，按照jpg和json存入save_dir
+    :param json_file:json文件绝对路径
+    :param save_dir:保存的目录绝对路径
+    :param config_path:配置文件路径
+    """
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    # 读配置文件
+    with open(config_path, 'r') as f:
+        json_conf = json.load(f)
+    # 标签转颜色
+    class2color = {}
+    for current_json in json_conf:
+        # 字符串转数字，从RGB转opencv的BGR
+        class2color[current_json['attributes']['class']] = list(map(int, current_json['color'].split(',')))[::-1]
+    # 读json
+    with open(json_file, 'r') as f:
+        json_array = json.load(f)
+    # 目录
+    dir = os.path.dirname(json_file)
+    # 字体
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    # 字体大小
+    font_size = 0.4
+    # 线条粗细
+    thickness = 1
+    for current_json in json_array:
+        filename = current_json['filename']
+        filename = os.path.join(dir, filename)
+        if not os.path.exists(filename):
+            continue
+        # 中文路径读图
+        img = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), 1)
+        annotations = current_json['annotations']
+        for annotation in annotations:
+            text = annotation['class']
+            color = class2color[text]
+            # 读形状
+            if 'height' in annotation and 'width' in annotation and 'x' in annotation and 'y' in annotation:
+                x = int(annotation["x"])
+                y = int(annotation["y"])
+                height = int(annotation["height"])
+                width = int(annotation["width"])
+                cv2.rectangle(img, (x, y), (x + width, y + height), color, thickness)
+            elif 'height' not in annotation and 'width' not in annotation and 'x' in annotation and 'y' in annotation:
+                x = int(annotation["x"])
+                y = int(annotation["y"])
+                cv2.circle(img, (x, y), 4, color, thickness)
+            elif 'xn' in annotation and 'yn' in annotation:
+                xn = np.array([float(b) for b in annotation["xn"].split(";")], int)
+                yn = np.array([float(b) for b in annotation["yn"].split(";")], int)
+                cur_contour = np.hstack([xn[:, np.newaxis], yn[:, np.newaxis]])
+                cur_contour1 = cur_contour[:, np.newaxis, :]
+                cv2.drawContours(img, [cur_contour1], -1, color, thickness)
+                x = xn[0]
+                y = yn[0]
+            else:
+                continue
+            cv2.putText(img, text, (x, y), font, font_size, color, thickness)
+        # cv2.imshow('test', img)
+        # cv2.waitKey(0)
+        image_name, image_ext = os.path.splitext(os.path.basename(filename))
+        image_save_path = os.path.join(save_dir, image_name + '.jpg')
+        cv2.imencode('.jpg', img)[1].tofile(image_save_path)
+    # with open(os.path.join(save_dir, os.path.basename(json_file)), 'w') as f:
+    #     json.dump(json_array, f)
+    shutil.move(json_file, os.path.join(save_dir, os.path.basename(json_file)))
+
+
 if __name__ == '__main__':
     fname = r'E:\sloth\conf\config.json'
+    generate_jpg(r'E:\sloth_test\测试\photo\LabelingImages\body_rgb_img.json',
+                 r'E:\sloth_test\测试\photo\LabelingImages\test_Images', fname)
     # search_dir = r'E:\sloth_test\test\Y84PD46173061'
     # search_name = r'merge_Y84PD46173061.bmp'
     # save_dir = r'E:\sloth_test\test1'
     # generate_sample(search_dir, search_name, save_dir, {'Face'}, split_ratio=0.8, do_shuffle=True)
-    search_dir = r'E:\tmp\测试图集示例'
-    search_name = r'body_rgb_img.bmp'
-    save_dir = r'E:\sloth_test\新建文件夹'
-    generate_sample(search_dir, search_name, save_dir, {'Face'}, split_ratio=1.0, do_shuffle=True, config_path=fname)
+    # search_dir = r'E:\tmp\测试图集示例'
+    # search_name = r'body_rgb_img.bmp'
+    # save_dir = r'E:\sloth_test\新建文件夹'
+    # generate_sample(search_dir, search_name, save_dir, {'Face'}, split_ratio=1.0, do_shuffle=True, config_path=fname)

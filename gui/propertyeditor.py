@@ -698,7 +698,7 @@ class PropertyEditor(QWidget):
     def startEditMode(self, model_items):
         # If we're in insertion mode, ignore empty edit requests
         if self._label_editor is not None and self._label_editor.insertionMode() \
-            and len(model_items) == 0:
+                and len(model_items) == 0:
             return
 
         self.endInsertionMode()
@@ -844,6 +844,15 @@ class PropertyEditor(QWidget):
                                            % col.name())
         self.color_info = col.getRgb()[:-1]
 
+    # 设置控件的隐藏状态
+    def component_visible(self, component_name, state):
+        if component_name == '添加标签':
+            self._group_box_add_label.setVisible(state)
+        elif component_name == 'add_txt':
+            self._group_box_add_txt.setVisible(state)
+        elif component_name == 'add_files':
+            self._group_box_add_files.setVisible(state)
+
     def _setupGUI(self):
         self._class_buttons = {}
         self._class_shortcuts = {}
@@ -858,9 +867,9 @@ class PropertyEditor(QWidget):
 
         # 添加txt模块
         self.combo_box = QComboBox()
-        self._group_box = QGroupBox('add_txt', self)
-        self._group_box_layout = QVBoxLayout()
-        self._group_box.setLayout(self._group_box_layout)
+        self._group_box_add_txt = QGroupBox('add_txt', self)
+        self._group_box_add_txt_layout = QVBoxLayout()
+        self._group_box_add_txt.setLayout(self._group_box_add_txt_layout)
         temp = cf.LABELS
         self.items = []
         # 获取所有的标签
@@ -871,11 +880,11 @@ class PropertyEditor(QWidget):
         self.add_txt_btn = QPushButton('add txt')
         self.add_txt_btn.clicked.connect(self.add_txt)
         # 加入下拉框和按钮
-        self._group_box_layout.addWidget(self.combo_box, 0)
-        self._group_box_layout.addWidget(self.add_txt_btn, 1)
+        self._group_box_add_txt_layout.addWidget(self.combo_box, 0)
+        self._group_box_add_txt_layout.addWidget(self.add_txt_btn, 1)
 
         # 根据关键字搜索图片模块
-        self._group_box2 = QGroupBox('add files', self)
+        self._group_box_add_files = QGroupBox('add files', self)
         # 文件名包含的
         self._key_word = QLineEdit('')
         self._key_word.setPlaceholderText('merge')
@@ -883,12 +892,12 @@ class PropertyEditor(QWidget):
         self._extension = QLineEdit('')
         self._extension.setPlaceholderText('bmp')
         self._search_btn = QPushButton('search files')
-        self._group_box_layout2 = QVBoxLayout()
+        self._group_box_add_files_layout = QVBoxLayout()
         # 加入控件
-        self._group_box_layout2.addWidget(self._key_word, 0)
-        self._group_box_layout2.addWidget(self._extension, 1)
-        self._group_box_layout2.addWidget(self._search_btn, 2)
-        self._group_box2.setLayout(self._group_box_layout2)
+        self._group_box_add_files_layout.addWidget(self._key_word, 0)
+        self._group_box_add_files_layout.addWidget(self._extension, 1)
+        self._group_box_add_files_layout.addWidget(self._search_btn, 2)
+        self._group_box_add_files.setLayout(self._group_box_add_files_layout)
 
         # 添加标签模块
         self._group_box_add_label = QGroupBox("添加标签", self)
@@ -945,9 +954,16 @@ class PropertyEditor(QWidget):
         # Global widget
         self._layout = MyVBoxLayout()
         self.setLayout(self._layout)
-        self._layout.addWidget(self._classbox, 0)
-        self._layout.addStretch(1)
-        self._layout.addWidget(self._group_box_add_label, 1)
-        self._layout.addWidget(self._group_box, 2)
-        self._layout.addWidget(self._group_box2, 3)
-        self._layout.addWidget(self._file_button, 4)
+        self._layout.addWidget(self._classbox, 1)
+        self._layout.insertWidget(-1, self._group_box_add_label, 1)
+        self._layout.insertWidget(-1, self._group_box_add_txt, 1)
+        self._layout.insertWidget(-1, self._group_box_add_files, 1)
+        self._layout.insertWidget(-1, self._file_button, 1)
+        # self._group_box_add_label.hide()
+        # self._group_box_add_label
+        # self._layout.removeWidget(self._group_box_add_label)
+        # self._layout.addStretch(1)
+        # self._layout.addWidget(self._group_box_add_label, 0)
+        # self._layout.addWidget(self._group_box, 0)
+        # self._layout.addWidget(self._group_box2, 0)
+        # self._layout.addWidget(self._file_button, 0)

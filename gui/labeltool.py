@@ -28,7 +28,6 @@ from sloth.gui.frameviewer import GraphicsView
 from sloth.gui.propertyeditor import PropertyEditor
 from sloth.utils.bind import bind, compose_noargs
 import sloth.conf.default_config as cf
-from sloth.items import items
 
 GUIDIR = os.path.join(os.path.dirname(__file__))
 
@@ -291,6 +290,11 @@ class MainWindow(QMainWindow):
             self.add_all_json(key_word)
         else:
             directory = QFileDialog.getExistingDirectory(self)
+            if self.mode.text() == '测试标定模式':
+                test_image = os.path.join(directory, 'test_Images')
+                print(test_image)
+                if not os.path.exists(test_image):
+                    os.mkdir(test_image)
             fnames = Main.get_merged_pictures(directory, key_word, extension)
             numFiles = len(fnames)
             progress_bar = QProgressDialog('Importing files...', 'Cancel import', 0, numFiles, self)
@@ -300,6 +304,11 @@ class MainWindow(QMainWindow):
                 progress_bar.setValue(c)
             progress_bar.close()
             return item
+
+    # 改变部件可视
+    def change_visible(self, action):
+        state = action.isChecked()
+        self.property_editor.component_visible(action.text(), not state)
 
     ###
     ### GUI/Application setup
@@ -386,6 +395,9 @@ class MainWindow(QMainWindow):
         # View menu
         self.ui.menu_Views.addAction(self.ui.dockProperties.toggleViewAction())
         self.ui.menu_Views.addAction(self.ui.dockAnnotations.toggleViewAction())
+        self.ui.actionAdd_label.triggered.connect(bind(self.change_visible, self.ui.actionAdd_label))
+        self.ui.actionAdd_txt.triggered.connect(bind(self.change_visible, self.ui.actionAdd_txt))
+        self.ui.actionAdd_files.triggered.connect(bind(self.change_visible, self.ui.actionAdd_files))
 
         # Annotation menu
         self.copyAnnotations = CopyAnnotations(self.labeltool)
@@ -398,6 +410,14 @@ class MainWindow(QMainWindow):
 
         ## connect action signals
         self.connectActions()
+
+        self.mode = self.ui.toolBar.addAction('训练标定模式', self.change_mode)
+
+    def change_mode(self):
+        if self.mode.text() == '训练标定模式':
+            self.mode.setText('测试标定模式')
+        else:
+            self.mode.setText('训练标定模式')
 
     # 获得临时的json名字
     def get_name(self, temp_json_path='faQ.json'):
@@ -813,7 +833,7 @@ class MainWindow(QMainWindow):
 
     # 保存
     def fileSave(self):
-        return self.labeltool.saveAnnotations(None)
+        return self.labeltool.saveAnnotations(None, self.mode.text() == '测试标定模式')
 
     # 另保存
     def fileSaveAs(self):

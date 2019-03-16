@@ -14,7 +14,7 @@ from sloth import VERSION
 from sloth.core.commands import get_commands
 from sloth.gui import MainWindow
 import logging
-import json
+import ExtractSegSample as ex
 import copy
 
 LOG = logging.getLogger(__name__)
@@ -245,8 +245,13 @@ class LabelTool(QObject):
             return None
         return self._model.root().getAnnotations()
 
-    def saveAnnotations(self, fname):
+    def saveAnnotations(self, fname, test_flag=False):
         success = False
+        # 获取这次配置文件的路径
+        if test_flag:
+            direct = os.path.dirname(sys.argv[0])
+            with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+                label_path = f.read()
         try:
             # create new container if the filename is different
             if fname is None:
@@ -270,6 +275,9 @@ class LabelTool(QObject):
                     json_name = os.path.splitext(os.path.basename(filename))[0] + '.json'
                     temp['filename'] = os.path.basename(filename)
                     self._container.save([temp], os.path.join(directory, json_name))
+                    if test_flag:
+                        ex.generate_jpg(os.path.join(directory, json_name), os.path.join(directory, 'test_Images'),
+                                        label_path)
             else:
                 self._container.save(ann, fname)
 
