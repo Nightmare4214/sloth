@@ -6,6 +6,8 @@ import numpy as np
 import simplejson as json
 import shutil
 
+from PIL import Image, ImageDraw, ImageFont
+
 
 def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='train.txt', test_name='test.txt',
                     index_name='index.txt', split_ratio=0.8, save_cnt=1, bshow=False, crop_ratio_lrtd=None,
@@ -193,13 +195,25 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
     ftest.close()
 
 
-def generate_jpg(json_file, save_dir, config_path='config.json'):
+def cv2ImgAddText(img, text, x, y, color=(0, 255, 0), font_size=20):
+    if isinstance(img, np.ndarray):  # 判断是否OpenCV图片类型
+        img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(img)
+    fontText = ImageFont.truetype(
+        "font/simsun.ttc", font_size, encoding="utf-8")
+    draw.text((x, y), text, color, font=fontText)
+    return cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
+
+
+def generate_jpg(json_file, save_dir, font_size=10, thickness=1, config_path='config.json'):
     """
     将json花在对应的图片上，按照jpg和json存入save_dir
     :param json_file:json文件绝对路径
     :param save_dir:保存的目录绝对路径
     :param config_path:配置文件路径
     """
+    if not os.path.exists(json_file):
+        return
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
     # 读配置文件
@@ -218,9 +232,9 @@ def generate_jpg(json_file, save_dir, config_path='config.json'):
     # 字体
     font = cv2.FONT_HERSHEY_SIMPLEX
     # 字体大小
-    font_size = 0.4
+    # font_size = 0.4
     # 线条粗细
-    thickness = 1
+    # thickness = 1
     for current_json in json_array:
         filename = current_json['filename']
         filename = os.path.join(dir, filename)
@@ -253,7 +267,10 @@ def generate_jpg(json_file, save_dir, config_path='config.json'):
                 y = yn[0]
             else:
                 continue
-            cv2.putText(img, text, (x, y), font, font_size, color, thickness)
+            img = cv2ImgAddText(img, text, x, y, tuple(color[::-1]), font_size)
+            # cv2.putText(img, text, (x, y), font, font_size, color, thickness)
+            # cv2.imshow('test', img)
+            # cv2.waitKey(0)
         # cv2.imshow('test', img)
         # cv2.waitKey(0)
         image_name, image_ext = os.path.splitext(os.path.basename(filename))
@@ -266,8 +283,9 @@ def generate_jpg(json_file, save_dir, config_path='config.json'):
 
 if __name__ == '__main__':
     fname = r'E:\sloth\conf\config.json'
-    generate_jpg(r'E:\sloth_test\测试\photo\LabelingImages\body_rgb_img.json',
-                 r'E:\sloth_test\测试\photo\LabelingImages\test_Images', fname)
+    generate_jpg(r'E:\sloth_test\faQ2\Y84PD46173061\merge_Y84PD46173061.json',
+                 r'E:\sloth_test\faQ2\Y84PD46173061\test_Images', font_size=30,
+                 config_path=fname)
     # search_dir = r'E:\sloth_test\test\Y84PD46173061'
     # search_name = r'merge_Y84PD46173061.bmp'
     # save_dir = r'E:\sloth_test\test1'

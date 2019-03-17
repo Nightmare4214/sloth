@@ -14,7 +14,7 @@ from sloth import VERSION
 from sloth.core.commands import get_commands
 from sloth.gui import MainWindow
 import logging
-import ExtractSegSample as ex
+import sloth.ExtractSegSample as ex
 import copy
 
 LOG = logging.getLogger(__name__)
@@ -277,7 +277,7 @@ class LabelTool(QObject):
                     self._container.save([temp], os.path.join(directory, json_name))
                     if test_flag:
                         ex.generate_jpg(os.path.join(directory, json_name), os.path.join(directory, 'test_Images'),
-                                        label_path)
+                                        font_size=30, config_path=label_path)
             else:
                 self._container.save(ann, fname)
 
