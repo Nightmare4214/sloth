@@ -415,19 +415,15 @@ class trainDialog(QDialog):
         split_ratio = self._spin_box.value() / 100
         # 是否打乱
         do_shuffle = self._shuffle.isChecked()
+        # 是否乘255/max
         multiply_flag = self._multiply.isChecked()
+        # 允许全零的图
+        enable_all_zero = self._enable_zero.isChecked()
         save_dir = QFileDialog.getExistingDirectory(self)
         if save_dir == '':
             return
-        print('search_name', search_name)
-        print('search_dir', search_dir)
-        print('defect', defect)
-        print('split_ratio', split_ratio)
-        print('do_shuffle', do_shuffle)
-        print('save_dir', save_dir)
-        print('config_path', self.conifg_path)
         ex.generate_sample(search_dir, search_name, save_dir, defect, split_ratio=split_ratio, do_shuffle=do_shuffle,
-                           config_path=self.conifg_path, multiply_flag=multiply_flag)
+                           config_path=self.conifg_path, multiply_flag=multiply_flag, enable_all_zero=enable_all_zero)
 
     def setupUi(self, items):
         self.setWindowTitle('训练数据生成')
@@ -462,6 +458,8 @@ class trainDialog(QDialog):
         self._shuffle = QtGui.QCheckBox("随机")
         # 是否随机打乱
         self._multiply = QtGui.QCheckBox("255 / max(class2label.values())")
+        # 允许全0的图片
+        self._enable_zero = QtGui.QCheckBox('允许全0的图片')
         # 选择文件夹
         self._file_button = QPushButton('生成')
         self._file_button.clicked.connect(self.generate)
@@ -479,6 +477,7 @@ class trainDialog(QDialog):
         self._train_layout.addWidget(self._spin_box)
         self._train_layout.addWidget(self._shuffle)
         self._train_layout.addWidget(self._multiply)
+        self._train_layout.addWidget(self._enable_zero)
         self._train_layout.addWidget(self._file_button)
 
 

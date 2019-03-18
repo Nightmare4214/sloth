@@ -16,6 +16,7 @@ from sloth.gui import MainWindow
 import logging
 import sloth.ExtractSegSample as ex
 import copy
+import time
 
 LOG = logging.getLogger(__name__)
 
@@ -246,6 +247,7 @@ class LabelTool(QObject):
         return self._model.root().getAnnotations()
 
     def saveAnnotations(self, fname, test_flag=False):
+        start = time.time()
         success = False
         # 获取这次配置文件的路径
         if test_flag:
@@ -261,12 +263,21 @@ class LabelTool(QObject):
 
             # Get annotations dict
             ann = self._model.root().getAnnotations()
-            print('save', ann)
             # getNewFile(ann)
             if fname is None:
                 # 遍历json，找到图片对应的部分，然后分别生成图片对应的json
                 for annontation in ann:
-                    # print('faQ',[annontation])
+                    start_save_json = time.time()
+                    empty_flag = False
+                    # 测试标定模式下
+                    if test_flag:
+                        # 获得annotation
+                        t = annontation['annotations']
+                        # 为空
+                        if t is None or len(t) < 1:
+                            empty_flag = True
+                    if empty_flag:
+                        continue
                     temp = copy.copy(annontation)
                     # 图片名称
                     filename = temp['filename']
@@ -275,9 +286,12 @@ class LabelTool(QObject):
                     json_name = os.path.splitext(os.path.basename(filename))[0] + '.json'
                     temp['filename'] = os.path.basename(filename)
                     self._container.save([temp], os.path.join(directory, json_name))
+                    print('save_json', time.time() - start_save_json)
+                    end_save_json = time.time()
                     if test_flag:
                         ex.generate_jpg(os.path.join(directory, json_name), os.path.join(directory, 'test_Images'),
                                         font_size=30, config_path=label_path)
+                    print('convert to jpg', time.time() - end_save_json)
             else:
                 self._container.save(ann, fname)
 
@@ -294,7 +308,7 @@ class LabelTool(QObject):
             msg = "Error: Saving failed (%s)" % str(e)
 
         self.statusMessage.emit(msg)
-
+        print('all', time.time() - start)
         return success
 
     def clearAnnotations(self):

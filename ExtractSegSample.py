@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw, ImageFont
 def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='train.txt', test_name='test.txt',
                     index_name='index.txt', split_ratio=0.8, save_cnt=1, bshow=False, crop_ratio_lrtd=None,
                     do_shuffle=True, only_defect=True, all_contain=False, config_path='config.json',
-                    multiply_flag=True):
+                    multiply_flag=True, enable_all_zero=True):
     """
     将文件夹中所有的符合的图片的json转为图片，并按比例分割成训练集和测试集
     :param search_dir: 搜索路径
@@ -31,6 +31,7 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
     :param all_contain 图片必须包含所有的要求缺陷
     :param config_path 配置文件路径
     :param multiply_flag: 像素放大
+    :param enable_all_zero: 是否允许全0的图，即允许有不往上画任何东西的图
     """
     if split_ratio > 1 or split_ratio < 0:
         return
@@ -47,6 +48,7 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
     # id转为类型
     idx2type = {}
     class2item = {}
+    cnt = 0
     for current_json in json_conf:
         class2item[current_json['attributes']['class']] = current_json['item'].split('.')[-1]
     for i, lab in enumerate(defect):
@@ -113,6 +115,9 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                 # 必须包含所有的缺陷
                 if all_contain and defect is not None and not defect.issubset(defect_set):
                     continue
+                # 不允许全0的图
+                if not enable_all_zero and len(labels) < 1:
+                    continue
                 # 中文路径读图
                 img = cv2.imdecode(np.fromfile(img_ful_filename, dtype=np.uint8), -1)
                 # 读图
@@ -173,8 +178,16 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                 all_save_label_names.append(
                     os.path.basename(write_text) + "  " + os.path.basename(save_label_path) + '\n')
                 save_cnt += 1
+                cnt += 1
 
     findex.close()
+    # if not enable_all_zero and cnt == 0:
+    #     try:
+    #         os.remove(os.path.join(save_dir, index_name))
+    #     except Exception as e:
+    #         print(e)
+    #     finally:
+    #         return
     # 打乱
     if do_shuffle:
         random.shuffle(all_save_label_names)
