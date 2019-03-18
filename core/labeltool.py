@@ -246,14 +246,12 @@ class LabelTool(QObject):
             return None
         return self._model.root().getAnnotations()
 
+    def set_to_image(self, func):
+        self.to_image = func
+
     def saveAnnotations(self, fname, test_flag=False):
         start = time.time()
         success = False
-        # 获取这次配置文件的路径
-        if test_flag:
-            direct = os.path.dirname(sys.argv[0])
-            with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
-                label_path = f.read()
         try:
             # create new container if the filename is different
             if fname is None:
@@ -263,35 +261,54 @@ class LabelTool(QObject):
 
             # Get annotations dict
             ann = self._model.root().getAnnotations()
-            # getNewFile(ann)
             if fname is None:
-                # 遍历json，找到图片对应的部分，然后分别生成图片对应的json
-                for annontation in ann:
+                # 测试模式下
+                if test_flag:
+                    # 获取这次配置文件的路径
+                    direct = os.path.dirname(sys.argv[0])
+                    with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+                        label_path = f.read()
+
                     start_save_json = time.time()
-                    empty_flag = False
-                    # 测试标定模式下
-                    if test_flag:
-                        # 获得annotation
-                        t = annontation['annotations']
+                    # 获得行
+                    row = self.to_image().row()
+                    if row >= 0:
+                        # 获得annotations
+                        annotation = copy.copy(ann[row])
+                        t = annotation['annotations']
+                        empty_flag = False
                         # 为空
                         if t is None or len(t) < 1:
                             empty_flag = True
-                    if empty_flag:
-                        continue
-                    temp = copy.copy(annontation)
-                    # 图片名称
-                    filename = temp['filename']
-                    # 图片目录
-                    directory = os.path.dirname(os.path.abspath(filename))
-                    json_name = os.path.splitext(os.path.basename(filename))[0] + '.json'
-                    temp['filename'] = os.path.basename(filename)
-                    self._container.save([temp], os.path.join(directory, json_name))
-                    print('save_json', time.time() - start_save_json)
-                    end_save_json = time.time()
-                    if test_flag:
-                        ex.generate_jpg(os.path.join(directory, json_name), os.path.join(directory, 'test_Images'),
-                                        font_size=30, config_path=label_path)
-                    print('convert to jpg', time.time() - end_save_json)
+                        if not empty_flag:
+                            # 图片名称
+                            filename = annotation['filename']
+                            # 图片目录
+                            directory = os.path.dirname(os.path.abspath(filename))
+                            json_name = os.path.splitext(os.path.basename(filename))[0] + '.json'
+                            annotation['filename'] = os.path.basename(filename)
+                            self._container.save([annotation], os.path.join(directory, json_name))
+                            print('save_json', time.time() - start_save_json)
+                            end_save_json = time.time()
+                            ex.generate_jpg(os.path.join(directory, json_name),
+                                            os.path.join(directory, 'test_Images'),
+                                            font_size=30, config_path=label_path)
+                            print('convert to jpg', time.time() - end_save_json)
+                else:
+                    # 遍历json，找到图片对应的部分，然后分别生成图片对应的json
+                    for annotation in ann:
+                        start_save_json = time.time()
+                        temp = copy.copy(annotation)
+                        # 图片名称
+                        filename = temp['filename']
+                        # 图片目录
+                        directory = os.path.dirname(os.path.abspath(filename))
+                        json_name = os.path.splitext(os.path.basename(filename))[0] + '.json'
+                        temp['filename'] = os.path.basename(filename)
+                        self._container.save([temp], os.path.join(directory, json_name))
+                        print('save_json', time.time() - start_save_json)
+                        end_save_json = time.time()
+                        print('convert to jpg', time.time() - end_save_json)
             else:
                 self._container.save(ann, fname)
 

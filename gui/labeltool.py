@@ -88,6 +88,7 @@ class MainWindow(QMainWindow):
         self.onAnnotationsLoaded()
 
         self._item_dir = {}
+        self.labeltool.set_to_image(self.to_image)
 
     def load_json(self):
         # 获取这次配置文件的路径
@@ -285,7 +286,7 @@ class MainWindow(QMainWindow):
     # 搜索文件
     def search_file(self):
         key_word = self.property_editor.get_key_word()
-        extension = self.property_editor.get_extension()
+        extension = self.property_editor.get_extension().lower()
         if extension == 'json':
             self.add_all_json(key_word)
         else:
@@ -889,13 +890,9 @@ class MainWindow(QMainWindow):
     # 读取文件夹的所有含merge的图片
     def addMediaFile1(self):
         path = '.'
-        # 标志位
-        key_word = 'merge'
         image_types = ['*.jpg', '*.bmp', '*.png', '*.pgm', '*.ppm', '*.tiff', '*.tif', '*.gif']
-        video_types = ['*.mp4', '*.mpg', '*.mpeg', '*.avi', '*.mov', '*.vob']
-        format_str = ' '.join(image_types + video_types)
         directory = QFileDialog.getExistingDirectory(self)
-        fnames = Main.get_merged_pictures(directory, key_word)
+        fnames = Main.get_merged_pictures(directory, None)
         numFiles = len(fnames)
         progress_bar = QProgressDialog('Importing files...', 'Cancel import', 0, numFiles, self)
         item = None
