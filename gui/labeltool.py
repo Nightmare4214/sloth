@@ -897,7 +897,7 @@ class MainWindow(QMainWindow):
         progress_bar = QProgressDialog('Importing files...', 'Cancel import', 0, numFiles, self)
         item = None
         for fname, c in zip(fnames, range(numFiles)):
-            if '*' + os.path.splitext(fname)[-1] in image_types:
+            if '*' + os.path.splitext(fname)[-1].lower() in image_types:
                 item = self.labeltool.addImageFile(self.real_path(fname, path))
             progress_bar.setValue(c)
         if item is None:

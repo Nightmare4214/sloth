@@ -59,7 +59,7 @@ def get_merged_pictures(pictures_path, key_word='merge', extension=None):
         for file in files:
             temp = os.path.splitext(file)
             if key_word is None or key_word is '' or temp[0].find(key_word) >= 0:
-                if extension is None or temp[1] == '.' + extension:
+                if extension is None or temp[1].lower() == '.' + extension:
                     pictures_list.append(os.path.abspath(os.path.join(root, file)))
     return pictures_list
 

@@ -6,7 +6,6 @@ from sloth.core.exceptions import \
     ImproperlyConfigured, NotImplementedException, InvalidArgumentException
 from sloth.core.utils import import_callable
 import logging
-import sys
 
 LOG = logging.getLogger(__name__)
 
