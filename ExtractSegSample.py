@@ -8,6 +8,8 @@ import shutil
 
 from PIL import Image, ImageDraw, ImageFont
 
+class2color = {}
+
 
 def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='train.txt', test_name='test.txt',
                     index_name='index.txt', split_ratio=0.8, save_cnt=1, bshow=False, crop_ratio_lrtd=None,
@@ -208,25 +210,34 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
     ftest.close()
 
 
-def generate_jpg(json_file, save_dir, font_size=10, thickness=1, config_path='config.json'):
+# 更新class2color
+def update(config_path):
+    # 读配置文件
+    with open(config_path, 'r') as f:
+        json_conf = json.load(f)
+    # 标签转颜色
+    global class2color
+    class2color = {}
+    for current_json in json_conf:
+        # 字符串转数字，从RGB转opencv的BGR
+        # class2color[current_json['attributes']['class']] = list(map(int, current_json['color'].split(',')))[::-1]
+        # 字符串转数字
+        class2color[current_json['attributes']['class']] = list(map(int, current_json['color'].split(',')))
+
+
+def generate_jpg(json_file, save_dir, font_size=10, thickness=1):
     """
     将json花在对应的图片上，按照jpg和json存入save_dir
     :param json_file:json文件绝对路径
     :param save_dir:保存的目录绝对路径
-    :param config_path:配置文件路径
+    :param font_size: 字体大小
+    :param thickness: 线条粗细
     """
     if not os.path.exists(json_file):
         return
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
-    # 读配置文件
-    with open(config_path, 'r') as f:
-        json_conf = json.load(f)
-    # 标签转颜色
-    class2color = {}
-    for current_json in json_conf:
-        # 字符串转数字，从RGB转opencv的BGR
-        class2color[current_json['attributes']['class']] = list(map(int, current_json['color'].split(',')))[::-1]
+    global class2color
     # 读json
     with open(json_file, 'r') as f:
         json_array = json.load(f)
@@ -239,6 +250,7 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1, config_path='co
             continue
         # 中文路径读图
         img = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), 1)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         annotations = current_json['annotations']
         text_queue = []
         for annotation in annotations:
@@ -265,23 +277,25 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1, config_path='co
                 y = yn[0]
             else:
                 continue
-            text_queue.append((text, x, y, tuple(color[::-1])))
+            text_queue.append((text, x, y, tuple(color)))
+            # text_queue.append((text, x, y, tuple(color[::-1])))
         # cv2.imshow('test', img)
         # cv2.waitKey(0)
-        img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        # 转成PIL的
+        img = Image.fromarray(img)
         for text, x, y, color in text_queue:
             draw = ImageDraw.Draw(img)
             fontText = ImageFont.truetype(
                 "font/simsun.ttc", font_size, encoding="utf-8")
+            # 写字
             draw.text((x, y), text, color, font=fontText)
+        # 转回opencv的BGR
         img = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
         # cv2.imshow('test', img)
         # cv2.waitKey(0)
         image_name, image_ext = os.path.splitext(os.path.basename(filename))
         image_save_path = os.path.join(save_dir, image_name + '.jpg')
         cv2.imencode('.jpg', img)[1].tofile(image_save_path)
-    # with open(os.path.join(save_dir, os.path.basename(json_file)), 'w') as f:
-    #     json.dump(json_array, f)
     shutil.move(json_file, os.path.join(save_dir, os.path.basename(json_file)))
 
 

@@ -268,7 +268,8 @@ class LabelTool(QObject):
                     direct = os.path.dirname(sys.argv[0])
                     with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
                         label_path = f.read()
-
+                    # 更新class2label
+                    ex.update(label_path)
                     start_save_json = time.time()
                     # 获得行
                     row = self.to_image().row()
@@ -292,7 +293,7 @@ class LabelTool(QObject):
                             end_save_json = time.time()
                             ex.generate_jpg(os.path.join(directory, json_name),
                                             os.path.join(directory, 'test_Images'),
-                                            font_size=30, config_path=label_path)
+                                            font_size=30)
                             print('convert to jpg', time.time() - end_save_json)
                 else:
                     # 遍历json，找到图片对应的部分，然后分别生成图片对应的json
@@ -323,6 +324,7 @@ class LabelTool(QObject):
             self._model.setDirty(False)
         except Exception as e:
             msg = "Error: Saving failed (%s)" % str(e)
+            print(msg)
 
         self.statusMessage.emit(msg)
         print('all', time.time() - start)
