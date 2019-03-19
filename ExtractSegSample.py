@@ -222,7 +222,7 @@ def update(config_path):
         # 字符串转数字，从RGB转opencv的BGR
         # class2color[current_json['attributes']['class']] = list(map(int, current_json['color'].split(',')))[::-1]
         # 字符串转数字
-        class2color[current_json['attributes']['class']] = list(map(int, current_json['color'].split(',')))
+        class2color[current_json['attributes']['class']] = list(map(int, current_json['color'].split(',')))[::-1]
 
 
 def generate_jpg(json_file, save_dir, font_size=10, thickness=1):
@@ -250,7 +250,7 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1):
             continue
         # 中文路径读图
         img = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), 1)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         annotations = current_json['annotations']
         text_queue = []
         for annotation in annotations:
@@ -289,8 +289,9 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1):
                 "font/simsun.ttc", font_size, encoding="utf-8")
             # 写字
             draw.text((x, y), text, color, font=fontText)
+        img = np.asarray(img)
         # 转回opencv的BGR
-        img = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
+        # img = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
         # cv2.imshow('test', img)
         # cv2.waitKey(0)
         image_name, image_ext = os.path.splitext(os.path.basename(filename))
