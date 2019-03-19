@@ -293,7 +293,6 @@ class MainWindow(QMainWindow):
             directory = QFileDialog.getExistingDirectory(self)
             if self.mode.text() == '测试标定模式':
                 test_image = os.path.join(directory, 'test_Images')
-                print(test_image)
                 if not os.path.exists(test_image):
                     os.mkdir(test_image)
             fnames = Main.get_merged_pictures(directory, key_word, extension)

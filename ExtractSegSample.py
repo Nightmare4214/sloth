@@ -208,16 +208,6 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
     ftest.close()
 
 
-def cv2ImgAddText(img, text, x, y, color=(0, 255, 0), font_size=20):
-    if isinstance(img, np.ndarray):  # 判断是否OpenCV图片类型
-        img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    draw = ImageDraw.Draw(img)
-    fontText = ImageFont.truetype(
-        "font/simsun.ttc", font_size, encoding="utf-8")
-    draw.text((x, y), text, color, font=fontText)
-    return cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
-
-
 def generate_jpg(json_file, save_dir, font_size=10, thickness=1, config_path='config.json'):
     """
     将json花在对应的图片上，按照jpg和json存入save_dir
@@ -242,12 +232,6 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1, config_path='co
         json_array = json.load(f)
     # 目录
     dir = os.path.dirname(json_file)
-    # 字体
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    # 字体大小
-    # font_size = 0.4
-    # 线条粗细
-    # thickness = 1
     for current_json in json_array:
         filename = current_json['filename']
         filename = os.path.join(dir, filename)
@@ -256,6 +240,7 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1, config_path='co
         # 中文路径读图
         img = cv2.imdecode(np.fromfile(filename, dtype=np.uint8), 1)
         annotations = current_json['annotations']
+        text_queue = []
         for annotation in annotations:
             text = annotation['class']
             color = class2color[text]
@@ -280,10 +265,16 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1, config_path='co
                 y = yn[0]
             else:
                 continue
-            img = cv2ImgAddText(img, text, x, y, tuple(color[::-1]), font_size)
-            # cv2.putText(img, text, (x, y), font, font_size, color, thickness)
-            # cv2.imshow('test', img)
-            # cv2.waitKey(0)
+            text_queue.append((text, x, y, tuple(color[::-1])))
+        # cv2.imshow('test', img)
+        # cv2.waitKey(0)
+        img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        for text, x, y, color in text_queue:
+            draw = ImageDraw.Draw(img)
+            fontText = ImageFont.truetype(
+                "font/simsun.ttc", font_size, encoding="utf-8")
+            draw.text((x, y), text, color, font=fontText)
+        img = cv2.cvtColor(np.asarray(img), cv2.COLOR_RGB2BGR)
         # cv2.imshow('test', img)
         # cv2.waitKey(0)
         image_name, image_ext = os.path.splitext(os.path.basename(filename))
