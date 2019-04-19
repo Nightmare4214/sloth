@@ -321,6 +321,14 @@ class MainWindow(QMainWindow):
     def change_visible(self, action):
         state = action.isChecked()
         self.property_editor.component_visible(action.text(), not state)
+    # 删除treeview 中的
+    def removeItem(self):
+        t = self.to_image()
+        if t.row() < 0:
+            return
+        annotations = self.labeltool.annotations()
+        print(annotations)
+
 
     ###
     ### GUI/Application setup
@@ -380,7 +388,7 @@ class MainWindow(QMainWindow):
 
         self.treeview = AnnotationTreeView()
         # 在treeview设置右键
-        self.treeview.set_openDirectory(self.openDirectory)
+        self.treeview.set_openDirectory(self.openDirectory, self.removeItem)
         self.treeview.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         self.ui.dockAnnotations.setWidget(self.treeview)
 
