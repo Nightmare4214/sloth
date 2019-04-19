@@ -43,9 +43,7 @@
      <string>&amp;Edit</string>
     </property>
     <addaction name="action_Add_Image"/>
-    <addaction name="action_Add_All_Image"/>
     <addaction name="actionAdd_Json"/>
-    <addaction name="actionAdd_All_Json"/>
    </widget>
    <widget class="QMenu" name="menu_Views">
     <property name="title">

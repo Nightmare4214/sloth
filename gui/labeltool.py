@@ -753,9 +753,9 @@ class MainWindow(QMainWindow):
 
         ## Navigation
         self.ui.action_Add_Image.triggered.connect(self.addMediaFile)
-        self.ui.action_Add_All_Image.triggered.connect(self.addMediaFile1)
+        # self.ui.action_Add_All_Image.triggered.connect(self.addMediaFile1)
         self.ui.actionAdd_Json.triggered.connect(self.add_json)
-        self.ui.actionAdd_All_Json.triggered.connect(self.add_all_json)
+        # self.ui.actionAdd_All_Json.triggered.connect(self.add_all_json)
 
         self.ui.actionNext.triggered.connect(self.labeltool.gotoNext)
         self.ui.actionPrevious.triggered.connect(self.labeltool.gotoPrevious)
@@ -873,12 +873,16 @@ class MainWindow(QMainWindow):
         for fname, c in zip(fnames, range(numFiles)):
             if len(str(fname)) == 0:
                 continue
-
             fname = str(fname)
             if os.path.isabs(fname):
                 # fname = os.path.relpath(fname, str(path))
                 fname = self.real_path(fname, str(path))
-
+            ann = set()
+            # 获得当前加的图片的绝对路径
+            for temp in self.labeltool._model.root().getAnnotations():
+                ann.add(temp['filename'])
+            if fname in ann:
+                return
             for pattern in image_types:
                 if fnmatch.fnmatch(fname.lower(), pattern):
                     item = self.labeltool.addImageFile(fname)
