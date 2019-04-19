@@ -311,6 +311,9 @@ class LabelTool(QObject):
                     for annotation in ann:
                         start_save_json = time.time()
                         temp = copy.copy(annotation)
+                        # 不要空的json
+                        if temp['annotations'] is None or len(temp['annotations']) < 1:
+                            return
                         # 图片名称
                         filename = temp['filename']
                         # 图片目录
@@ -402,8 +405,8 @@ class LabelTool(QObject):
     def currentImage(self):
         return self._current_image
 
-    def setGetState(self,func):
-        self.get_test_mode=func
+    def setGetState(self, func):
+        self.get_test_mode = func
 
     def setCurrentImage(self, image):
         if self._current_image is not None and self.get_test_mode() == '测试标定模式':
