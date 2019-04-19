@@ -249,7 +249,7 @@ class LabelTool(QObject):
     def set_to_image(self, func):
         self.to_image = func
 
-    def saveAnnotations(self, fname, test_flag=False):
+    def saveAnnotations(self, fname, test_flag=False, pre=-1, all_flag=False):
         start = time.time()
         success = False
         try:
@@ -272,10 +272,16 @@ class LabelTool(QObject):
                     ex.update(label_path)
                     start_save_json = time.time()
                     # 获得行
-                    row = self.to_image().row()
-                    if row >= 0:
+                    row = [self.to_image().row()]
+                    if pre != -1:
+                        row = [pre]
+                    if all_flag:
+                        row = list(range(len(ann)))
+                    for r in row:
+                        if r < 0:
+                            continue
                         # 获得annotations
-                        annotation = copy.copy(ann[row])
+                        annotation = copy.copy(ann[r])
                         t = annotation['annotations']
                         empty_flag = False
                         # 为空
@@ -289,12 +295,17 @@ class LabelTool(QObject):
                             json_name = os.path.splitext(os.path.basename(filename))[0] + '.json'
                             annotation['filename'] = os.path.basename(filename)
                             self._container.save([annotation], os.path.join(directory, json_name))
+                            annotation['filename'] = os.path.join('..', os.path.basename(filename))
+                            if not os.path.exists(os.path.join(directory, 'test_Images')):
+                                os.mkdir(os.path.join(directory, 'test_Images'))
+                            self._container.save([annotation], os.path.join(directory, 'test_Images', json_name))
                             print('save_json', time.time() - start_save_json)
                             end_save_json = time.time()
                             ex.generate_jpg(os.path.join(directory, json_name),
                                             os.path.join(directory, 'test_Images'),
                                             font_size=30)
                             print('convert to jpg', time.time() - end_save_json)
+
                 else:
                     # 遍历json，找到图片对应的部分，然后分别生成图片对应的json
                     for annotation in ann:

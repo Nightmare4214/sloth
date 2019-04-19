@@ -297,7 +297,7 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1):
         image_name, image_ext = os.path.splitext(os.path.basename(filename))
         image_save_path = os.path.join(save_dir, image_name + '.jpg')
         cv2.imencode('.jpg', img)[1].tofile(image_save_path)
-    shutil.move(json_file, os.path.join(save_dir, os.path.basename(json_file)))
+    # shutil.move(json_file, os.path.join(save_dir, os.path.basename(json_file)))
 
 
 if __name__ == '__main__':
