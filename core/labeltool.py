@@ -317,6 +317,8 @@ class LabelTool(QObject):
                         directory = os.path.dirname(os.path.abspath(filename))
                         json_name = os.path.splitext(os.path.basename(filename))[0] + '.json'
                         temp['filename'] = os.path.basename(filename)
+                        # if temp['annotations'] is None or len(temp['annotations'])<1:
+                        #     continue
                         self._container.save([temp], os.path.join(directory, json_name))
                         print('save_json', time.time() - start_save_json)
                         end_save_json = time.time()

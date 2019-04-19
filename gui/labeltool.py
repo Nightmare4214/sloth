@@ -299,9 +299,16 @@ class MainWindow(QMainWindow):
             numFiles = len(fnames)
             progress_bar = QProgressDialog('Importing files...', 'Cancel import', 0, numFiles, self)
             item = None
+            ann=set()
+            # 获得当前加的图片的绝对路径
+            for temp in self.labeltool._model.root().getAnnotations():
+                ann.add(temp['filename'])
             for fname, c in zip(fnames, range(numFiles)):
-                item = self.labeltool.addImageFile(self.real_path(fname, '.'))
-                progress_bar.setValue(c)
+                # 只加没加过的
+                if fname not in ann:
+                    ann.add(fname)
+                    item = self.labeltool.addImageFile(self.real_path(fname, '.'))
+                    progress_bar.setValue(c)
             progress_bar.close()
             return item
 
