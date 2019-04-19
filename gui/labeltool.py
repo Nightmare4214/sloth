@@ -364,8 +364,9 @@ class MainWindow(QMainWindow):
         # Property Editor
         self.property_editor = PropertyEditor(config.LABELS)
         self.property_editor.setFunction(self.search_file)
-        self.ui.dockProperties.setWidget(self.property_editor)
-
+        t=QtGui.QScrollArea()
+        t.setWidget(self.property_editor)
+        self.ui.dockProperties.setWidget(t)
         # Scene
         self.scene = AnnotationScene(self.labeltool, items=items, inserters=inserters)
         self.property_editor.insertionModeStarted.connect(self.scene.onInsertionModeStarted)
