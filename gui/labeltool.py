@@ -21,6 +21,7 @@ from sloth.annotations.model import AnnotationTreeView, FrameModelItem, ImageFil
     InterpolateRange
 from sloth.conf import config
 from sloth.core.utils import import_callable
+from sloth.items import inserters
 from sloth.gui import qrc_icons  # needed for toolbar icons
 from sloth.gui.annotationscene import AnnotationScene
 from sloth.gui.controlbuttons import ControlButtonWidget
@@ -90,6 +91,7 @@ class MainWindow(QMainWindow):
         self._item_dir = {}
         self.labeltool.set_to_image(self.to_image)
         self.labeltool.setGetState(self.is_test_mode)
+        self.listenMouse = False
 
     def is_test_mode(self):
         return self.mode.text()
@@ -321,13 +323,14 @@ class MainWindow(QMainWindow):
     def change_visible(self, action):
         state = action.isChecked()
         self.property_editor.component_visible(action.text(), not state)
+
     # 删除treeview 中的
     def removeItem(self):
         t = self.to_image()
         if t.row() < 0:
             return
+        t.Delete()
         annotations = self.labeltool.annotations()
-        print(annotations)
 
 
     ###
@@ -399,7 +402,8 @@ class MainWindow(QMainWindow):
         self.posinfo.setFrameStyle(QFrame.StyledPanel)
         self.statusBar().addPermanentWidget(self.posinfo)
         self.scene.mousePositionChanged.connect(self.onMousePositionChanged)
-
+        self.scene.mousePress.connect(self.onMousePress)
+        self.scene.mouseRelease.connect(self.onMouseRelease)
         self.image_resolution = QLabel("[no image]")
         self.image_resolution.setFrameStyle(QFrame.StyledPanel)
         self.statusBar().addPermanentWidget(self.image_resolution)
@@ -626,7 +630,6 @@ class MainWindow(QMainWindow):
                     return
 
         attribute_class = model_index.data()
-        print('attribute_class', attribute_class)
         if attribute_class == '':
             return
         for i in self.scene.selectedItems():
@@ -655,6 +658,8 @@ class MainWindow(QMainWindow):
 
     # 撤回
     def undo(self):
+        if self.listenMouse:
+            return
         a = self.to_image()
         i = 0
         last_child = None
@@ -680,9 +685,6 @@ class MainWindow(QMainWindow):
         # 给文件加撤回列表
         if open_path not in self._item_dir:
             self._item_dir[open_path] = []
-        print(last_child.data())
-        print(last_child.child(0, 1).data())
-        print(last_child.child(1, 1).data())
         self.treeview.setCurrentIndex(last_child)
         config = self.load_json()
         item_type = None
@@ -703,6 +705,8 @@ class MainWindow(QMainWindow):
 
     # 重做（相当于ctrl+y或者ctrl+shift+z)
     def redo(self):
+        if self.listenMouse:
+            return
         a = self.to_image()
         annotations = self.labeltool.annotations()
         if a.row() < 0:
@@ -714,7 +718,6 @@ class MainWindow(QMainWindow):
         attribute_class = self._item_dir[open_path][-1][0]
         item_type = self._item_dir[open_path][-1][1]
         data = self._item_dir[open_path][-1][2]
-        print('attribute_class', attribute_class)
         if attribute_class == '' or attribute_class is None:
             return
         if item_type is None:
@@ -944,8 +947,15 @@ class MainWindow(QMainWindow):
         self.ui.dockProperties.setFeatures(features)
         self.ui.dockAnnotations.setFeatures(features)
 
+    def onMousePress(self):
+        self.listenMouse = True
+
+    def onMouseRelease(self):
+        self.listenMouse = False
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Control or event.key == Qt.Key_Shift or event.key == Qt.Key_Alt:
+            event.accept()
             return
         uKey = event.key()
         modifiers = event.modifiers()
@@ -953,10 +963,26 @@ class MainWindow(QMainWindow):
             uKey += Qt.Key_Control
         if modifiers & Qt.ShiftModifier:
             uKey += Qt.Key_Shift
-        if uKey == Qt.Key_Z + Qt.Key_Control:
+        if modifiers & Qt.AltModifier:
+            uKey += Qt.Key_Alt
+        if uKey == Qt.Key_Z + Qt.Key_Control + Qt.Key_Alt:
+            if self.scene._inserter is not None:
+                self.scene._inserter.abort()
+                del self.scene._inserter
+                self.scene._inserter = None
+            event.ignore()
+        elif uKey == Qt.Key_Z + Qt.Key_Control:
+            if self.scene._inserter is not None:
+                if type(self.scene._inserter) == inserters.PolygonItemInserter:
+                    if self.scene._inserter._item is not None:
+                        return
             self.undo()
             event.accept()
         elif uKey == Qt.Key_Z + Qt.Key_Control + Qt.Key_Shift:
+            if self.scene._inserter is not None:
+                if type(self.scene._inserter) == inserters.PolygonItemInserter:
+                    if self.scene._inserter._item is not None:
+                        return
             self.redo()
             event.accept()
         else:

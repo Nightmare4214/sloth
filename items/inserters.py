@@ -429,18 +429,20 @@ class PolygonItemInserter(ItemInserter):
             # we want to throw it away.
             self._removeLastPointAndFinish(image_item)
             event.ignore()
-        uKey = event.key()
-        modifiers = event.modifiers()
-        if modifiers & Qt.ControlModifier:
-            uKey += Qt.Key_Control
-        print('uKey', uKey)
-        if (uKey == Qt.Key_Z + Qt.Key_Control) \
-            and self._item is not None:
-            polygon = self._item.polygon()
-            if polygon.size() == 1:
-                event.ignore()
-            polygon = polygon[0:-1]
-            self._item.setPolygon(polygon)
+        else:
+            uKey = event.key()
+            modifiers = event.modifiers()
+            if modifiers & Qt.ControlModifier:
+                uKey += Qt.Key_Control
+            # print('uKey', uKey)
+            # 按点撤回
+            # if (uKey == Qt.Key_Z + Qt.Key_Control) \
+            #     and self._item is not None:
+            #     polygon = self._item.polygon()
+            #     if polygon.size() == 1:
+            #         event.ignore()
+            #     polygon = polygon[0:-1]
+            #     self._item.setPolygon(polygon)
 
     def abort(self):
         if self._item is not None:

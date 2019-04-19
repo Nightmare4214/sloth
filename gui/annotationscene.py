@@ -15,6 +15,8 @@ LOG = logging.getLogger(__name__)
 
 class AnnotationScene(QGraphicsScene):
     mousePositionChanged = pyqtSignal(float, float)
+    mousePress = pyqtSignal()
+    mouseRelease = pyqtSignal()
 
     def __init__(self, labeltool, items=None, inserters=None, parent=None):
         super(AnnotationScene, self).__init__(parent)
@@ -217,14 +219,16 @@ class AnnotationScene(QGraphicsScene):
     # mouse event handlers
     #
     def mousePressEvent(self, event):
-        LOG.debug("mousePressEvent %s %s" % (self.sceneRect().contains(event.scenePos()), event.scenePos()))
-        if self._inserter is not None:
-            if not self.sceneRect().contains(event.scenePos()) and \
-                not self._inserter.allowOutOfSceneEvents():
-                # ignore events outside the scene rect
-                return
-            # insert mode
-            self._inserter.mousePressEvent(event, self._image_item)
+        if event.button() == Qt.LeftButton:
+            self.mousePress.emit()
+            LOG.debug("mousePressEvent %s %s" % (self.sceneRect().contains(event.scenePos()), event.scenePos()))
+            if self._inserter is not None:
+                if not self.sceneRect().contains(event.scenePos()) and \
+                    not self._inserter.allowOutOfSceneEvents():
+                    # ignore events outside the scene rect
+                    return
+                # insert mode
+                self._inserter.mousePressEvent(event, self._image_item)
         else:
             # selection mode
             QGraphicsScene.mousePressEvent(self, event)
@@ -243,6 +247,8 @@ class AnnotationScene(QGraphicsScene):
             QGraphicsScene.mouseDoubleClickEvent(self, event)
 
     def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.mouseRelease.emit()
         LOG.debug("mouseReleaseEvent %s %s" % (self.sceneRect().contains(event.scenePos()), event.scenePos()))
         if self._inserter is not None:
             # insert mode
@@ -268,17 +274,7 @@ class AnnotationScene(QGraphicsScene):
             self._inserter.keyPressEvent(event, self._image_item)
         else:
             # selection mode
-            if event.key() == Qt.Key_Control or event.key == Qt.Key_Shift or event.key == Qt.Key_Alt:
-                return
-            uKey = event.key()
-            modifiers = event.modifiers()
-            if modifiers & Qt.ControlModifier:
-                uKey += Qt.Key_Control
-            elif uKey == Qt.Key_Z + Qt.Key_Control:
-                self._labeltool.undo()
-                event.accept()
-            else:
-                QGraphicsScene.keyPressEvent(self, event)
+            QGraphicsScene.keyPressEvent(self, event)
 
     def deselectAllItems(self):
         for item in self.items():
