@@ -402,7 +402,14 @@ class LabelTool(QObject):
     def currentImage(self):
         return self._current_image
 
+    def setGetState(self,func):
+        self.get_test_mode=func
+
     def setCurrentImage(self, image):
+        if self._current_image is not None and self.get_test_mode() == '测试标定模式':
+            # 如果有上一张
+            self.saveAnnotations(None, True, self._current_image.row())
+            # print(self._current_image.row())
         if isinstance(image, QModelIndex):
             image = self._model.itemFromIndex(image)
         if isinstance(image, RootModelItem):

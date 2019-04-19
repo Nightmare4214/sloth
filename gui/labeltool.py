@@ -89,6 +89,10 @@ class MainWindow(QMainWindow):
 
         self._item_dir = {}
         self.labeltool.set_to_image(self.to_image)
+        self.labeltool.setGetState(self.is_test_mode)
+
+    def is_test_mode(self):
+        return self.mode.text()
 
     def load_json(self):
         # 获取这次配置文件的路径
@@ -152,6 +156,7 @@ class MainWindow(QMainWindow):
         self.property_editor.onModelChanged(self.labeltool.model())
         self.startBackgroundLoading()
 
+    # 图片切换了之后触发
     def onCurrentImageChanged(self):
         new_image = self.labeltool.currentImage()
         self.scene.setCurrentImage(new_image)
@@ -299,7 +304,7 @@ class MainWindow(QMainWindow):
             numFiles = len(fnames)
             progress_bar = QProgressDialog('Importing files...', 'Cancel import', 0, numFiles, self)
             item = None
-            ann=set()
+            ann = set()
             # 获得当前加的图片的绝对路径
             for temp in self.labeltool._model.root().getAnnotations():
                 ann.add(temp['filename'])
@@ -419,12 +424,19 @@ class MainWindow(QMainWindow):
         self.connectActions()
 
         self.mode = self.ui.toolBar.addAction('训练标定模式', self.change_mode)
+        self.save_all_mode = self.ui.toolBar.addAction('只保存当前的', self.save_change_mode)
 
     def change_mode(self):
         if self.mode.text() == '训练标定模式':
             self.mode.setText('测试标定模式')
         else:
             self.mode.setText('训练标定模式')
+
+    def save_change_mode(self):
+        if self.save_all_mode.text() == '只保存当前的':
+            self.save_all_mode.setText('保存全部图片')
+        else:
+            self.save_all_mode.setText('只保存当前的')
 
     # 获得临时的json名字
     def get_name(self, temp_json_path='faQ.json'):
@@ -840,7 +852,8 @@ class MainWindow(QMainWindow):
 
     # 保存
     def fileSave(self):
-        return self.labeltool.saveAnnotations(None, self.mode.text() == '测试标定模式')
+        return self.labeltool.saveAnnotations(None, self.mode.text() == '测试标定模式', pre=-1,
+                                              all_flag=self.save_all_mode.text() == '保存全部图片')
 
     # 另保存
     def fileSaveAs(self):
