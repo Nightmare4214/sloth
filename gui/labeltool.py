@@ -6,7 +6,7 @@ import logging
 import os
 import platform
 import sys
-
+import shutil
 import PyQt4.uic as uic
 import json5
 import sloth.Main as Main
@@ -325,12 +325,24 @@ class MainWindow(QMainWindow):
         self.property_editor.component_visible(action.text(), not state)
 
     # 删除treeview 中的
-    def removeItem(self):
+    def remove_treeview_Item(self):
         t = self.to_image()
         if t.row() < 0:
             return
-        t.Delete()
         annotations = self.labeltool.annotations()
+        delete_file_dir = os.path.dirname(annotations[t.row()]['filename'])
+        # 删掉目标json
+        annotations.pop(t.row())
+        # 临时存json
+        temp_save = self.get_name()
+        # 存储json
+        with open(temp_save, 'w') as f:
+            json5.dump(annotations, f)
+        self.labeltool.loadAnnotations(temp_save)
+        # 删除临时的json
+        os.remove(temp_save)
+        #递归删除文件夹
+        shutil.rmtree(delete_file_dir)
 
 
     ###
@@ -391,7 +403,7 @@ class MainWindow(QMainWindow):
 
         self.treeview = AnnotationTreeView()
         # 在treeview设置右键
-        self.treeview.set_openDirectory(self.openDirectory, self.removeItem)
+        self.treeview.set_openDirectory(self.openDirectory, self.remove_treeview_Item)
         self.treeview.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         self.ui.dockAnnotations.setWidget(self.treeview)
 
