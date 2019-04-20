@@ -304,6 +304,14 @@ class MainWindow(QMainWindow):
                     os.mkdir(test_image)
             fnames = Main.get_merged_pictures(directory, key_word, extension)
             numFiles = len(fnames)
+            if numFiles <= 0:
+                return
+            else:
+                temp_json = self.get_name()
+                with open(temp_json, 'w') as f:
+                    json5.dump([], f)
+                self.labeltool.loadAnnotations(temp_json)
+                os.remove(temp_json)
             progress_bar = QProgressDialog('Importing files...', 'Cancel import', 0, numFiles, self)
             item = None
             ann = set()
@@ -341,9 +349,8 @@ class MainWindow(QMainWindow):
         self.labeltool.loadAnnotations(temp_save)
         # 删除临时的json
         os.remove(temp_save)
-        #递归删除文件夹
+        # 递归删除文件夹
         shutil.rmtree(delete_file_dir)
-
 
     ###
     ### GUI/Application setup
@@ -364,7 +371,7 @@ class MainWindow(QMainWindow):
         # Property Editor
         self.property_editor = PropertyEditor(config.LABELS)
         self.property_editor.setFunction(self.search_file)
-        t=QtGui.QScrollArea()
+        t = QtGui.QScrollArea()
         t.setWidget(self.property_editor)
         self.ui.dockProperties.setWidget(t)
         # Scene
@@ -571,6 +578,7 @@ class MainWindow(QMainWindow):
         os.remove(temp_json_path)
         # 要读取的json文件夹
         json_path = QFileDialog.getExistingDirectory(self)
+        readed_flag = False
         # 遍历所有的文件
         for root, dirs, files in os.walk(json_path):
             for file in files:
@@ -598,6 +606,10 @@ class MainWindow(QMainWindow):
                         # 判断filename在json中
                         if 'filename' in current_json and \
                                 set(current_json.keys()).issubset({'annotations', 'class', 'filename'}):
+                            if not readed_flag:
+                                filename_set.clear()
+                                readed_flag = True
+                                temp_json.clear()
                             # 绝对路径
                             filename = os.path.abspath(os.path.join(root, current_json['filename']))
                             # 相对路径
