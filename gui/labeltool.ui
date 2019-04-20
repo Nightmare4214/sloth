@@ -24,7 +24,7 @@
      <x>0</x>
      <y>0</y>
      <width>656</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -44,6 +44,8 @@
     </property>
     <addaction name="action_Add_Image"/>
     <addaction name="actionAdd_Json"/>
+    <addaction name="separator"/>
+    <addaction name="actionChange_Config"/>
    </widget>
    <widget class="QMenu" name="menu_Views">
     <property name="title">
@@ -375,6 +377,11 @@
    </property>
    <property name="text">
     <string>add_files</string>
+   </property>
+  </action>
+  <action name="actionChange_Config">
+   <property name="text">
+    <string>Change Config</string>
    </property>
   </action>
  </widget>

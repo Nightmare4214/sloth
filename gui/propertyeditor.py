@@ -17,6 +17,7 @@ from sloth.utils.bind import bind
 import sloth.conf.default_config as cf
 import sloth.Main as Main
 import sloth.ExtractSegSample as ex
+import copy
 
 LOG = logging.getLogger(__name__)
 
@@ -523,6 +524,25 @@ class PropertyEditor(QWidget):
             self.addLabelClass(label)
         self.image_path = None
 
+    def addLabelClassByPath(self, configs_path):
+        # 读配置文件
+        with open(configs_path, 'r') as f:
+            configs = json5.load(f)
+        # 写入当前配置文件的路径
+        direct = os.path.dirname(sys.argv[0])
+        with open(os.path.join(direct, 'sloth.txt'), 'w') as f:
+            f.write(configs_path)
+        self._parea.setGeometry(0, 0, 200, 0)
+        for temp_json in configs:
+            self.addLabelClass(temp_json)
+            # 注册
+            self._register('inserter', temp_json['attributes']['class'], temp_json['inserter'])
+            self._register('item', temp_json['attributes']['class'], temp_json['item'])
+            # add_txt的下拉框里也要添加
+            self.combo_box.addItem(temp_json['attributes']['class'])
+            self.items.append(temp_json['attributes']['class'])
+            cf.LABELS.append(temp_json)
+
     def onModelChanged(self, new_model):
         attrs = set([k for k, v in self._attribute_handlers.items() if v.autoAddEnabled()])
         if len(attrs) > 0:
@@ -545,6 +565,24 @@ class PropertyEditor(QWidget):
     # 设置右键菜单所在位置
     def showContextMenu(self, label_class):
         self._class_context[label_class].exec_(QCursor.pos())
+
+    # 删除所有的item
+    def remove_all_item(self):
+        self._class_shortcuts.clear()
+        self._class_context.clear()
+        self._class_action.clear()
+        self._class_config.clear()
+        self.combo_box.clear()
+        self.items.clear()
+        temp_dict = copy.copy(self._class_buttons)
+        for k, v in temp_dict.items():
+            self._classbox_layout.removeWidget(v)
+            # 下面这句很重要，不然相当于没删
+            self._class_buttons[k].deleteLater()
+        self._class_buttons.clear()
+        cf.LABELS.clear()
+
+        self._parea.setGeometry(0, 0, 200, 60)
 
     # 删除标签
     def remove_item(self, label_class):
@@ -581,7 +619,7 @@ class PropertyEditor(QWidget):
 
                 with open(label_path, 'w') as f:
                     json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
-                self._parea.setGeometry(0, 0, 200, max(self._parea.geometry().height()-40, 60))
+                self._parea.setGeometry(0, 0, 200, max(self._parea.geometry().height() - 40, 60))
             except Exception as e:
                 print(e)
         except Exception as e:

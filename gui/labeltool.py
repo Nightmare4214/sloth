@@ -785,6 +785,30 @@ class MainWindow(QMainWindow):
         else:
             self._item_dir[open_path] = self._item_dir[open_path][0:-1]
 
+    # 更改当前的配置文件
+    def change_config(self):
+        path = '.'
+        filename = self.labeltool.getCurrentFilename()
+        if (filename is not None) and (len(filename) > 0):
+            path = QFileInfo(filename).path()
+        config_types = ['*.json']
+        format_str = ' '.join(config_types)
+        fname = QFileDialog.getOpenFileName(self, "%s - Add Media File" % APP_NAME, path,
+                                            "Media files (%s)" % (format_str,))
+        if fname is None or fname == '':
+            return
+        # 转绝对路径
+        fname = os.path.abspath(fname)
+        with open(fname, 'r') as f:
+            configs = json5.load(f)
+        # TODO:判断是个合法的配置文件，我这里只过滤了不是jsonarray的
+        if not isinstance(configs, list):
+            return
+        # 移除原来的配置文件
+        self.property_editor.remove_all_item()
+        # 加入新的配置文件
+        self.property_editor.addLabelClassByPath(fname)
+
     def connectActions(self):
         ## File menu
         self.ui.actionNew.triggered.connect(self.fileNew)
@@ -804,6 +828,8 @@ class MainWindow(QMainWindow):
         # self.ui.action_Add_All_Image.triggered.connect(self.addMediaFile1)
         self.ui.actionAdd_Json.triggered.connect(self.add_json)
         # self.ui.actionAdd_All_Json.triggered.connect(self.add_all_json)
+
+        self.ui.actionChange_Config.triggered.connect(self.change_config)
 
         self.ui.actionNext.triggered.connect(self.labeltool.gotoNext)
         self.ui.actionPrevious.triggered.connect(self.labeltool.gotoPrevious)
