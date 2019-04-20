@@ -517,6 +517,7 @@ class PropertyEditor(QWidget):
         self._handler_factory = AttributeHandlerFactory()
 
         self._setupGUI()
+        self._parea.setGeometry(0, 0, 200, 0)
         # Add label classes from config
         for label in config:
             self.addLabelClass(label)
@@ -580,7 +581,7 @@ class PropertyEditor(QWidget):
 
                 with open(label_path, 'w') as f:
                     json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
-
+                self._parea.setGeometry(0, 0, 200, max(self._parea.geometry().height()-40, 60))
             except Exception as e:
                 print(e)
         except Exception as e:
@@ -605,11 +606,12 @@ class PropertyEditor(QWidget):
 
         # Add label class button
         button_text = label_config['text']
-        button = QPushButton(button_text, self)
+        button = QPushButton(button_text)
         button.setCheckable(True)
         button.setFlat(True)
         button.clicked.connect(bind(self.onClassButtonPressed, label_class))
         self._class_buttons[label_class] = button
+        self._parea.setGeometry(0, 0, 200, self._parea.geometry().height() + 40)
         self._classbox_layout.addWidget(button)
 
         # 添加右键菜单
@@ -667,14 +669,14 @@ class PropertyEditor(QWidget):
             button.setChecked(lc == label_class)
         LOG.debug("Starting insertion mode for %s" % label_class)
         self._label_editor = LabelEditor([self._class_items[label_class]], self, True)
-        self._layout.insertWidget(1, self._label_editor, 0)
+        # self._layout.insertWidget(1, self._label_editor, 0)
         self.insertionModeStarted.emit(label_class)
 
     def endInsertionMode(self, uncheck_buttons=True):
         if self._label_editor is not None:
             LOG.debug("Ending insertion/edit mode")
             self._label_editor.hide()
-            self._layout.removeWidget(self._label_editor)
+            # self._layout.removeWidget(self._label_editor)
             self._label_editor = None
             if uncheck_buttons:
                 self.uncheckAllButtons()
@@ -860,10 +862,17 @@ class PropertyEditor(QWidget):
         self._label_editor = None
 
         # Label class buttons
-        self._classbox = QGroupBox("Labels", self)
+        self._parea = QGroupBox("Labels")
+        self._classbox = QScrollArea()
         self._classbox_layout = FloatingLayout()
-        self._classbox.setLayout(self._classbox_layout)
-
+        # self._classbox.setLayout(self._classbox_layout)
+        self._parea.setLayout(self._classbox_layout)
+        self._parea.setGeometry(0, 0, 200, 200)
+        self._classbox.setWidget(self._parea)
+        self._classbox.setGeometry(0, 0, 100, 100)
+        # self._classbox.setWidgetResizable(True)
+        # self._classbox.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        # self._classbox.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         # 添加txt模块
         self.combo_box = QComboBox()
         self._group_box_add_txt = QGroupBox('add_txt', self)
