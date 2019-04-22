@@ -307,81 +307,66 @@ class LabelEditor(QScrollArea):
         return self._insertion_mode
 
 
-# 复选下拉框
-class ComboCheckBox(QComboBox):
-    def __init__(self, items):
-        super(ComboCheckBox, self).__init__()
-        self.items = items
-        if self.items is not None and len(self.items) >= 1 and self.items[0] != '全部':
-            self.items.insert(0, '全部')
-        self.row_num = len(self.items)
-        self.Selectedrow_num = 0
-        self.qCheckBox = []
-        self.qLineEdit = QLineEdit()
-        self.qLineEdit.setReadOnly(True)
-        self.qListWidget = QListWidget()
-        self.addQCheckBox(0)
-        self.qCheckBox[0].stateChanged.connect(self.All)
-        for i in range(1, self.row_num):
-            self.addQCheckBox(i)
-            self.qCheckBox[i].stateChanged.connect(self.show)
-        self.setModel(self.qListWidget.model())
-        self.setView(self.qListWidget)
-        self.setLineEdit(self.qLineEdit)
+class MultiSelectDialog(QDialog):
+    def __init__(self, label_list, setGray, parent=None):
+        super(MultiSelectDialog, self).__init__(parent)
+        self.setGray = setGray
+        self.label_list = label_list
+        self.setupUi(label_list)
 
-    def addQCheckBox(self, i):
-        self.qCheckBox.append(QtGui.QCheckBox())
-        qItem = QListWidgetItem(self.qListWidget)
-        self.qCheckBox[i].setText(self.items[i])
-        self.qListWidget.setItemWidget(qItem, self.qCheckBox[i])
+    # 批量修改
+    def all_modify(self):
+        temp = {}
+        # 获取spin的值
+        v = self.spin_box.value()
+        for label in self.label_list:
+            if self.class_check[label].isChecked():
+                temp[label] = v
+        self.setGray(temp)
 
-    def Selectlist(self):
-        Outputlist = set()
-        for i in range(1, self.row_num):
-            if self.qCheckBox[i].isChecked():
-                Outputlist.add(self.qCheckBox[i].text())
-        self.Selectedrow_num = len(Outputlist)
-        return Outputlist
+    def all_check(self):
+        for v in self.class_check.values():
+            v.stateChanged.disconnect()
+            v.setChecked(self.all_check_box.isChecked())
+            v.stateChanged.connect(self.change_all)
 
-    def show(self):
-        show = ''
-        Outputlist = self.Selectlist()
-        self.qLineEdit.setReadOnly(False)
-        self.qLineEdit.clear()
-        for i in Outputlist:
-            show += i + ';'
-        if self.Selectedrow_num == 0:
-            self.qCheckBox[0].setCheckState(0)
-        elif self.Selectedrow_num == self.row_num - 1:
-            self.qCheckBox[0].setCheckState(2)
-        else:
-            self.qCheckBox[0].setCheckState(1)
-        self.qLineEdit.setText(show)
-        self.qLineEdit.setReadOnly(True)
+    def change_all(self):
+        for v in self.class_check.values():
+            if not v.isChecked():
+                self.all_check_box.stateChanged.disconnect()
+                self.all_check_box.setChecked(False)
+                self.all_check_box.stateChanged.connect(self.all_check)
+                return
+        self.all_check_box.setChecked(True)
 
-    def All(self, zhuangtai):
-        if zhuangtai == 2:
-            for i in range(1, self.row_num):
-                self.qCheckBox[i].setChecked(True)
-        elif zhuangtai == 1:
-            if self.Selectedrow_num == 0:
-                self.qCheckBox[0].setCheckState(2)
-        elif zhuangtai == 0:
-            self.clear()
+    def setupUi(self, label_list):
+        self.setWindowTitle('批量修改')
 
-    def clear(self):
-        for i in range(self.row_num):
-            self.qCheckBox[i].setChecked(False)
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        temp_layout = QtGui.QHBoxLayout()
+        self.spin_box = QtGui.QSpinBox()
+        self.spin_box.setMinimum(0)
+        self.spin_box.setMaximum(255)
+        self.modify_btn = QPushButton('批量修改')
+        self.modify_btn.clicked.connect(self.all_modify)
+        temp_layout.addWidget(self.spin_box)
+        temp_layout.addWidget(self.modify_btn)
+        layout.addLayout(temp_layout)
+        self.all_check_box = QtGui.QCheckBox('全选')
+        self.all_check_box.stateChanged.connect(self.all_check)
+        layout.addWidget(self.all_check_box)
+        self.class_check = {}
+        for label in label_list:
+            self.class_check[label] = QtGui.QCheckBox(label)
+            layout.addWidget(self.class_check[label])
+            self.class_check[label].stateChanged.connect(self.change_all)
 
 
-# 训练数据对话框
-class trainDialog(QDialog):
-    def __init__(self, items, parent=None):
-        super(trainDialog, self).__init__(parent)
-        self.setupUi(items)
-        direct = os.path.dirname(sys.argv[0])
-        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
-            self.conifg_path = f.read()
+class TrainDialog(QDialog):
+    def __init__(self, parent=None):
+        super(TrainDialog, self).__init__(parent)
+        self.setupUi()
 
     # 选择图片
     def select_image(self):
@@ -401,7 +386,7 @@ class trainDialog(QDialog):
             return
         self._collect_label.setText(directory)
 
-    # 生成训练数据
+    # 生成数据
     def generate(self):
         # 训练源
         search_name = self._image_label.text()
@@ -411,8 +396,6 @@ class trainDialog(QDialog):
         search_dir = self._collect_label.text()
         if search_dir is None or search_dir == '':
             return
-        # 缺陷类型
-        defect = self._train_combo_box.Selectlist()
         # 训练集所占比例
         split_ratio = self._spin_box.value() / 100
         # 是否打乱
@@ -424,10 +407,28 @@ class trainDialog(QDialog):
         save_dir = QFileDialog.getExistingDirectory(self)
         if save_dir == '':
             return
-        ex.generate_sample(search_dir, search_name, save_dir, defect, split_ratio=split_ratio, do_shuffle=do_shuffle,
-                           config_path=self.conifg_path, multiply_flag=multiply_flag, enable_all_zero=enable_all_zero)
+        class2label = {}
+        for k, v in self.class2idx.items():
+            if v == 0:
+                continue
+            class2label[k] = v
+        ex.generate_sample(search_dir, search_name, save_dir, class2label, self.class2item,
+                           split_ratio=split_ratio, do_shuffle=do_shuffle, multiply_flag=multiply_flag,
+                           enable_all_zero=enable_all_zero)
+        # ex.generate_sample(search_dir, search_name, save_dir, defect, split_ratio=split_ratio, do_shuffle=do_shuffle,
+        #                    config_path=self.conifg_path, multiply_flag=multiply_flag, enable_all_zero=enable_all_zero)
 
-    def setupUi(self, items):
+    # 批量修改
+    def modify(self):
+        temp = MultiSelectDialog(self.label_list, self.setGray, self)
+        temp.exec_()
+
+    def setGray(self, temp_gray):
+        for k, v in temp_gray.items():
+            self.class_text[k].setValue(v)
+            self.class2idx[k] = v
+
+    def setupUi(self):
         self.setWindowTitle('训练数据生成')
         self._train_layout = QVBoxLayout()
         self.setLayout(self._train_layout)
@@ -445,15 +446,17 @@ class trainDialog(QDialog):
         self._collect_btn.clicked.connect(self.select_directory)
         self._collect_layout.addWidget(self._collect_label)
         self._collect_layout.addWidget(self._collect_btn)
-        # 缺陷选择
-        self._train_combo_box = ComboCheckBox(items)
         # 训练集占比
         self._spin_box = QtGui.QDoubleSpinBox()
         self._spin_box.setMaximum(100)
         self._spin_box.setValue(80.0)
+
+        self.modify_btn = QPushButton('批量修改灰度值')
+        self.modify_btn.clicked.connect(self.modify)
+
         # 是否随机打乱
         self._shuffle = QtGui.QCheckBox("随机")
-        # 是否随机打乱
+        # 等分
         self._multiply = QtGui.QCheckBox("255 / max(class2label.values())")
         # 允许全0的图片
         self._enable_zero = QtGui.QCheckBox('允许全0的图片')
@@ -470,12 +473,40 @@ class trainDialog(QDialog):
         self.collect_Widget.setLayout(self._collect_layout)
         self._train_layout.addWidget(self.collect_Widget)
 
-        self._train_layout.addWidget(self._train_combo_box)
         self._train_layout.addWidget(self._spin_box)
+        self._train_layout.addWidget(self.modify_btn)
         self._train_layout.addWidget(self._shuffle)
         self._train_layout.addWidget(self._multiply)
         self._train_layout.addWidget(self._enable_zero)
         self._train_layout.addWidget(self._file_button)
+
+        self.label_list = []
+        # 获取这次配置文件的路径
+        direct = os.path.dirname(sys.argv[0])
+        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+            label_path = f.read()
+        # 读取配置文件
+        with open(label_path, 'r') as f:
+            json_conf = json5.load(f)
+        # 缺陷对应图形
+        self.class2item = {}
+        # 缺陷对应灰度值
+        self.class2idx = {}
+        # 缺陷的数值
+        self.class_text = {}
+        for i, current_json in enumerate(json_conf):
+            temp_class = current_json['attributes']['class']
+            self.label_list.append(temp_class)
+            self.class2item[temp_class] = current_json['item'].split('.')[-1]
+            self.class2idx[temp_class] = i + 1
+            temp_layout = QtGui.QHBoxLayout()
+            temp_layout.addWidget(QtGui.QLabel(temp_class))
+            self.class_text[temp_class] = QtGui.QSpinBox()
+            self.class_text[temp_class].setMinimum(0)
+            self.class_text[temp_class].setMaximum(255)
+            self.class_text[temp_class].setValue(i + 1)
+            temp_layout.addWidget(self.class_text[temp_class])
+            self._train_layout.addLayout(temp_layout)
 
 
 brush2idx = {'Qt.NoBrush': 0,
@@ -782,7 +813,9 @@ class PropertyEditor(QWidget):
 
     # 生成训练数据
     def generate(self):
-        a = trainDialog(self.items, self)
+        # a = trainDialog(self.items, self)
+        # a.exec_()
+        a = TrainDialog(self)
         a.exec_()
 
     # 从labeltool中设置搜索按钮

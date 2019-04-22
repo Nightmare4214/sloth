@@ -11,57 +11,38 @@ from PIL import Image, ImageDraw, ImageFont
 class2color = {}
 
 
-def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='train.txt', test_name='test.txt',
-                    index_name='index.txt', split_ratio=0.8, save_cnt=1, bshow=False, crop_ratio_lrtd=None,
-                    do_shuffle=True, only_defect=True, all_contain=False, config_path='config.json',
+def generate_sample(search_dir, search_name, save_dir, class2label, class2item, train_name='train.txt',
+                    test_name='test.txt', index_name='index.txt', split_ratio=0.8, save_cnt=1, bshow=False,
+                    crop_ratio_lrtd=None, do_shuffle=True, only_defect=True, all_contain=False,
                     multiply_flag=True, enable_all_zero=True):
     """
-    将文件夹中所有的符合的图片的json转为图片，并按比例分割成训练集和测试集
-    :param search_dir: 搜索路径
-    :param search_name: 搜索名字
-    :param save_dir: 保存路径
-    :param defect: 需要包含的缺陷类型->set,如果是None则不选择权限类型
-    :param train_name: 训练txt名字，只要文件名字，如train.txt，不要写绝对路径
-    :param test_name: 测试txt名字，只要文件名字，如test.txt，不要写绝对路径
-    :param index_name: 索引txt名字，只要文件名字，index.txt，不要写绝对路径
-    :param split_ratio: 训练集比例，0-1之间，
-    :param save_cnt: 计数开始
-    :param bshow: 是否显示图片
-    :param crop_ratio_lrtd: crop the image with ratio, l r t d ratio is specified
-    :param do_shuffle: 打乱
-    :param only_defect 只画defect中的缺陷类型
-    :param all_contain 图片必须包含所有的要求缺陷
-    :param config_path 配置文件路径
-    :param multiply_flag: 像素放大
-    :param enable_all_zero: 是否允许全0的图，即允许有不往上画任何东西的图
-    """
+        将文件夹中所有的符合的图片的json转为图片，并按比例分割成训练集和测试集
+        :param search_dir: 搜索路径
+        :param search_name: 搜索名字
+        :param save_dir: 保存路径
+        :param class2label: 缺陷转像素
+        :param class2item: 缺陷的形状
+        :param train_name: 训练txt名字，只要文件名字，如train.txt，不要写绝对路径
+        :param test_name: 测试txt名字，只要文件名字，如test.txt，不要写绝对路径
+        :param index_name: 索引txt名字，只要文件名字，index.txt，不要写绝对路径
+        :param split_ratio: 训练集比例，0-1之间，
+        :param save_cnt: 计数开始
+        :param bshow: 是否显示图片
+        :param crop_ratio_lrtd: crop the image with ratio, l r t d ratio is specified
+        :param do_shuffle: 打乱
+        :param only_defect 只画defect中的缺陷类型
+        :param all_contain 图片必须包含所有的要求缺陷
+        :param multiply_flag: 像素放大
+        :param enable_all_zero: 是否允许全0的图，即允许有不往上画任何东西的图
+        """
     if split_ratio > 1 or split_ratio < 0:
         return
-    # 读取配置文件路径
-    # direct = os.path.dirname(sys.argv[0])
-    # with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
-    #     fname = f.read()
-    # with open(os.path.join(direct, './bin/sloth.txt'), 'r') as f:
-    #     fname = f.read()
-    # 读取配置文件
-    with open(config_path, 'r') as f:
-        json_conf = json.load(f)
-    class2label = {}
-    # id转为类型
-    idx2type = {}
-    class2item = {}
     cnt = 0
-    for current_json in json_conf:
-        class2item[current_json['attributes']['class']] = current_json['item'].split('.')[-1]
-    for i, lab in enumerate(defect):
-        idx2type[i + 1] = class2item[lab]
-        class2label[lab] = i + 1
     if crop_ratio_lrtd is None:
         crop_ratio_lrtd = []
     # 目录不存在，则创建
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
-
     all_save_label_names = []
     findex = open(os.path.join(save_dir, index_name), "w")
     search_name = os.path.basename(search_name)
@@ -83,16 +64,16 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                 annotations = cur_json['annotations']
                 if len(annotations) == 0:
                     continue
+                # 画的点，灰度值
                 contours, labels = [], []
-
                 # 遍历annotations
                 for annotation in annotations:
                     if 'class' in annotation and annotation["class"] in class2label:
                         defect_set.add(annotation['class'])
                         # 只要在defect中
-                        if only_defect and defect is not None and annotation['class'] not in defect:
+                        if only_defect and annotation['class'] not in class2label:
                             continue
-                        labels.append(class2label[annotation["class"]])
+                        labels.append(annotation["class"])
                     else:
                         break
                     # 多边形
@@ -115,32 +96,25 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                         y = int(annotation["y"])
                         contours.append((x, y))
                 # 必须包含所有的缺陷
-                if all_contain and defect is not None and not defect.issubset(defect_set):
+                if all_contain and not set(class2label.keys()).issubset(defect_set):
                     continue
                 # 不允许全0的图
                 if not enable_all_zero and len(labels) < 1:
                     continue
                 # 中文路径读图
                 img = cv2.imdecode(np.fromfile(img_ful_filename, dtype=np.uint8), -1)
-                # 读图
-                # img = cv2.imread(img_ful_filename, cv2.IMREAD_UNCHANGED)
-                # def filter_img(img):
-                #     blured_img = cv2.medianBlur(img, 5)
-                #     return blured_img
-                # img = filter_img(img)
-                print('this is a version')
                 # 黑底图片
                 label_img = np.zeros((img.shape[:2]), np.uint8)
                 r = list(zip(labels, contours))
-                r = sorted(r, key=lambda t: idx2type[t[0]])
+                r = sorted(r, key=lambda t: class2label[t[0]])
                 # 画图
                 for i, j in r:
-                    if idx2type[i] == 'PolygonItem':
-                        cv2.drawContours(label_img, [j], -1, i, -1)
-                    elif idx2type[i] == 'PointItem':
-                        cv2.circle(label_img, j, 4, i, -1)
-                    elif idx2type[i] == 'RectItem':
-                        cv2.rectangle(label_img, j[0], j[1], i, -1)
+                    if class2item[i] == 'PolygonItem':
+                        cv2.drawContours(label_img, [j], -1, class2label[i], -1)
+                    elif class2item[i] == 'PointItem':
+                        cv2.circle(label_img, j, 4, class2label[i], -1)
+                    elif class2item[i] == 'RectItem':
+                        cv2.rectangle(label_img, j[0], j[1], class2label[i], -1)
                 # 裁剪
                 if crop_ratio_lrtd is not None and len(crop_ratio_lrtd) == 4:
                     sx, sy = int(crop_ratio_lrtd[0] * label_img.shape[1]), int(
@@ -181,15 +155,7 @@ def generate_sample(search_dir, search_name, save_dir, defect=None, train_name='
                     os.path.basename(write_text) + "  " + os.path.basename(save_label_path) + '\n')
                 save_cnt += 1
                 cnt += 1
-
     findex.close()
-    # if not enable_all_zero and cnt == 0:
-    #     try:
-    #         os.remove(os.path.join(save_dir, index_name))
-    #     except Exception as e:
-    #         print(e)
-    #     finally:
-    #         return
     # 打乱
     if do_shuffle:
         random.shuffle(all_save_label_names)
