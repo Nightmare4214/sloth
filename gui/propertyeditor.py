@@ -312,7 +312,8 @@ class ComboCheckBox(QComboBox):
     def __init__(self, items):
         super(ComboCheckBox, self).__init__()
         self.items = items
-        self.items.insert(0, '全部')
+        if self.items is not None and len(self.items) >= 1 and self.items[0] != '全部':
+            self.items.insert(0, '全部')
         self.row_num = len(self.items)
         self.Selectedrow_num = 0
         self.qCheckBox = []
@@ -435,11 +436,7 @@ class trainDialog(QDialog):
         self._image_layout = QtGui.QHBoxLayout()
         self._image_layout.addWidget(QtGui.QLabel('训练源：'))
         self._image_label = QLineEdit('test.jpg')
-        # self._image_label = QtGui.QLabel('')
-        # self._image_btn = QPushButton('...')
-        # self._image_btn.clicked.connect(self.select_image)
         self._image_layout.addWidget(self._image_label)
-        # self._image_layout.addWidget(self._image_btn)
         # 采图夹
         self._collect_layout = QtGui.QHBoxLayout()
         self._collect_layout.addWidget(QtGui.QLabel('采图夹：'))
@@ -450,7 +447,6 @@ class trainDialog(QDialog):
         self._collect_layout.addWidget(self._collect_btn)
         # 缺陷选择
         self._train_combo_box = ComboCheckBox(items)
-        # self._train_combo_box.addItems(items)
         # 训练集占比
         self._spin_box = QtGui.QDoubleSpinBox()
         self._spin_box.setMaximum(100)
