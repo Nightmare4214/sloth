@@ -305,6 +305,7 @@ class LabelEditor(QScrollArea):
         return self._insertion_mode
 
 
+# 批量修改对话框
 class MultiSelectDialog(QDialog):
     def __init__(self, label_list, setGray, parent=None):
         super(MultiSelectDialog, self).__init__(parent)
@@ -354,13 +355,25 @@ class MultiSelectDialog(QDialog):
         self.all_check_box = QtGui.QCheckBox('全选')
         self.all_check_box.stateChanged.connect(self.all_check)
         layout.addWidget(self.all_check_box)
+
+        self._parea = QWidget()
+        self._classbox = QScrollArea()
+        self._classbox_layout = QVBoxLayout()
+        self._parea.setLayout(self._classbox_layout)
+        self._parea.setGeometry(0, 0, len(label_list) * 50, 300)
+        self._classbox.setWidget(self._parea)
+        self._classbox.setGeometry(0, 0, 200, 200)
+
+        layout.addWidget(self._classbox)
+
         self.class_check = {}
         for label in label_list:
             self.class_check[label] = QtGui.QCheckBox(label)
-            layout.addWidget(self.class_check[label])
+            self._classbox_layout.addWidget(self.class_check[label])
             self.class_check[label].stateChanged.connect(self.change_all)
 
 
+# 训练对话框
 class TrainDialog(QDialog):
     def __init__(self, parent=None):
         super(TrainDialog, self).__init__(parent)
@@ -413,8 +426,6 @@ class TrainDialog(QDialog):
         ex.generate_sample(search_dir, search_name, save_dir, class2label, self.class2item,
                            split_ratio=split_ratio, do_shuffle=do_shuffle, multiply_flag=multiply_flag,
                            enable_all_zero=enable_all_zero)
-        # ex.generate_sample(search_dir, search_name, save_dir, defect, split_ratio=split_ratio, do_shuffle=do_shuffle,
-        #                    config_path=self.conifg_path, multiply_flag=multiply_flag, enable_all_zero=enable_all_zero)
 
     # 批量修改
     def modify(self):
@@ -489,6 +500,17 @@ class TrainDialog(QDialog):
         self.class2item = {}
         # 缺陷的数值
         self.class_text = {}
+
+        self._parea = QWidget()
+        self._classbox = QScrollArea()
+        self._classbox_layout = QVBoxLayout()
+        self._parea.setLayout(self._classbox_layout)
+        self._parea.setGeometry(0, 0, len(json_conf)*35, 400)
+        self._classbox.setWidget(self._parea)
+        self._classbox.setGeometry(0, 0, 200, 300)
+
+        self._train_layout.addWidget(self._classbox)
+
         for i, current_json in enumerate(json_conf):
             temp_class = current_json['attributes']['class']
             self.label_list.append(temp_class)
@@ -500,7 +522,7 @@ class TrainDialog(QDialog):
             self.class_text[temp_class].setMaximum(255)
             self.class_text[temp_class].setValue(i + 1)
             temp_layout.addWidget(self.class_text[temp_class])
-            self._train_layout.addLayout(temp_layout)
+            self._classbox_layout.addLayout(temp_layout)
 
 
 brush2idx = {'Qt.NoBrush': 0,
@@ -926,14 +948,10 @@ class PropertyEditor(QWidget):
         self._parea = QGroupBox("Labels")
         self._classbox = QScrollArea()
         self._classbox_layout = FloatingLayout()
-        # self._classbox.setLayout(self._classbox_layout)
         self._parea.setLayout(self._classbox_layout)
         self._parea.setGeometry(0, 0, 200, 200)
         self._classbox.setWidget(self._parea)
         self._classbox.setGeometry(0, 0, 100, 100)
-        # self._classbox.setWidgetResizable(True)
-        # self._classbox.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        # self._classbox.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         # 添加txt模块
         self.combo_box = QComboBox()
         self._group_box_add_txt = QGroupBox('add_txt', self)
@@ -1028,11 +1046,3 @@ class PropertyEditor(QWidget):
         self._layout.insertWidget(-1, self._group_box_add_txt, 1)
         self._layout.insertWidget(-1, self._group_box_add_files, 1)
         self._layout.insertWidget(-1, self._file_button, 1)
-        # self._group_box_add_label.hide()
-        # self._group_box_add_label
-        # self._layout.removeWidget(self._group_box_add_label)
-        # self._layout.addStretch(1)
-        # self._layout.addWidget(self._group_box_add_label, 0)
-        # self._layout.addWidget(self._group_box, 0)
-        # self._layout.addWidget(self._group_box2, 0)
-        # self._layout.addWidget(self._file_button, 0)
