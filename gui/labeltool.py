@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# _*_ coding:utf-8 _*_
 import json
 import fnmatch
 import functools
@@ -15,7 +16,7 @@ from PyQt4.QtCore import QSettings, QSize, QPoint, QVariant, QFileInfo, QTimer, 
 from PyQt4.QtGui import QMainWindow, QSizePolicy, QWidget, QVBoxLayout, QAction, \
     QKeySequence, QLabel, QItemSelectionModel, QMessageBox, QFileDialog, QFrame, \
     QDockWidget, QProgressBar, QProgressDialog, QCursor, QGraphicsPolygonItem
-from sloth import APP_NAME, ORGANIZATION_DOMAIN
+from sloth import APP_NAME
 from sloth.annotations.container import AnnotationContainerFactory
 from sloth.annotations.model import AnnotationTreeView, FrameModelItem, ImageFileModelItem, CopyAnnotations, \
     InterpolateRange
@@ -352,9 +353,7 @@ class MainWindow(QMainWindow):
         # 递归删除文件夹
         shutil.rmtree(delete_file_dir)
 
-    ###
-    ### GUI/Application setup
-    ###___________________________________________________________________________________________
+    # 初始化界面
     def setupGui(self):
 
         self.ui = uic.loadUi(os.path.join(GUIDIR, "labeltool.ui"), self)
@@ -1042,9 +1041,7 @@ class MainWindow(QMainWindow):
             except TypeError:
                 pass
 
-    ###
-    ### global event handling
-    ###______________________________________________________________________________
+    # 关闭事件
     def closeEvent(self, event):
         if self.okToContinue():
             self.saveApplicationSettings()
@@ -1053,8 +1050,6 @@ class MainWindow(QMainWindow):
 
     def about(self):
         QMessageBox.about(self, "About %s" % APP_NAME,
-                          """<b>%s</b> version %s
-             <p>This labeling application for computer vision research
-             was developed at the CVHCI research group at KIT.
-             <p>For more details, visit our homepage: <a href="%s">%s</a>"""
-                          % (APP_NAME, __version__, ORGANIZATION_DOMAIN, ORGANIZATION_DOMAIN))
+                          """<b>%s</b> version
+             <p>modified by Nightmare"""
+                          % 1.0, )

@@ -4,7 +4,6 @@ import random
 import cv2
 import numpy as np
 import simplejson as json
-import shutil
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -75,7 +74,7 @@ def generate_sample(search_dir, search_name, save_dir, class2label, class2item, 
                             continue
                         labels.append(annotation["class"])
                     else:
-                        break
+                        continue
                     # 多边形
                     if 'xn' in annotation and 'yn' in annotation:
                         xn = np.array([float(b) for b in annotation["xn"].split(";")], int)
@@ -142,13 +141,11 @@ def generate_sample(search_dir, search_name, save_dir, class2label, class2item, 
                 # json转换后的图片路径
                 save_label_path = os.path.join(save_dir, temp_json_name + cnt_str + "_label" + image_ext)
                 # 保存json转换后的图片
-                # cv2.imwrite(save_label_path, label_img)
                 cv2.imencode(image_ext, label_img)[1].tofile(save_label_path)
                 # 原始图片图片路径
                 save_src_path = os.path.join(save_dir, temp_json_name + cnt_str + image_ext)
                 write_text = save_src_path
                 # 保存原始图片图片
-                # cv2.imwrite(save_src_path, img)
                 cv2.imencode(image_ext, img)[1].tofile(save_src_path)
                 findex.write(os.path.basename(write_text) + ' ' + os.path.dirname(root) + '\n')
                 all_save_label_names.append(
@@ -161,8 +158,6 @@ def generate_sample(search_dir, search_name, save_dir, class2label, class2item, 
         random.shuffle(all_save_label_names)
     # 训练集个数
     train_cnt = int(len(all_save_label_names) * split_ratio)
-    print('train cnt is {} and test cnt is {}'.format(
-        train_cnt, len(all_save_label_names) - train_cnt))
     ftrain = open(os.path.join(save_dir, train_name), "w")
     ftest = open(os.path.join(save_dir, test_name), "w")
     # 根据比例分割
@@ -263,19 +258,3 @@ def generate_jpg(json_file, save_dir, font_size=10, thickness=1):
         image_name, image_ext = os.path.splitext(os.path.basename(filename))
         image_save_path = os.path.join(save_dir, image_name + '.jpg')
         cv2.imencode('.jpg', img)[1].tofile(image_save_path)
-    # shutil.move(json_file, os.path.join(save_dir, os.path.basename(json_file)))
-
-
-if __name__ == '__main__':
-    fname = r'E:\sloth\conf\config.json'
-    generate_jpg(r'E:\sloth_test\faQ2\Y84PD46173061\merge_Y84PD46173061.json',
-                 r'E:\sloth_test\faQ2\Y84PD46173061\test_Images', font_size=30,
-                 config_path=fname)
-    # search_dir = r'E:\sloth_test\test\Y84PD46173061'
-    # search_name = r'merge_Y84PD46173061.bmp'
-    # save_dir = r'E:\sloth_test\test1'
-    # generate_sample(search_dir, search_name, save_dir, {'Face'}, split_ratio=0.8, do_shuffle=True)
-    # search_dir = r'E:\tmp\测试图集示例'
-    # search_name = r'body_rgb_img.bmp'
-    # save_dir = r'E:\sloth_test\新建文件夹'
-    # generate_sample(search_dir, search_name, save_dir, {'Face'}, split_ratio=1.0, do_shuffle=True, config_path=fname)

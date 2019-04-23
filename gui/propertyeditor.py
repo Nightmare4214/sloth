@@ -6,9 +6,7 @@ import logging
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import pyqtSignal, QSize, Qt, QRegExp
 from PyQt4.QtGui import QWidget, QGroupBox, QVBoxLayout, QPushButton, QScrollArea, QLineEdit, QDoubleValidator, \
-    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor, QRegExpValidator, QDialog, QListWidget, \
-    QListWidgetItem
-from sloth.annotations.container import AnnotationContainerFactory
+    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor, QRegExpValidator, QDialog
 from sloth.core.exceptions import ImproperlyConfigured
 from sloth.annotations.model import AnnotationModelItem
 from sloth.gui.floatinglayout import FloatingLayout
@@ -408,10 +406,10 @@ class TrainDialog(QDialog):
         if save_dir == '':
             return
         class2label = {}
-        for k, v in self.class2idx.items():
+        for k, v in self.class_text.items():
             if v == 0:
                 continue
-            class2label[k] = v
+            class2label[k] = v.value()
         ex.generate_sample(search_dir, search_name, save_dir, class2label, self.class2item,
                            split_ratio=split_ratio, do_shuffle=do_shuffle, multiply_flag=multiply_flag,
                            enable_all_zero=enable_all_zero)
@@ -426,7 +424,6 @@ class TrainDialog(QDialog):
     def setGray(self, temp_gray):
         for k, v in temp_gray.items():
             self.class_text[k].setValue(v)
-            self.class2idx[k] = v
 
     def setupUi(self):
         self.setWindowTitle('训练数据生成')
@@ -490,15 +487,12 @@ class TrainDialog(QDialog):
             json_conf = json5.load(f)
         # 缺陷对应图形
         self.class2item = {}
-        # 缺陷对应灰度值
-        self.class2idx = {}
         # 缺陷的数值
         self.class_text = {}
         for i, current_json in enumerate(json_conf):
             temp_class = current_json['attributes']['class']
             self.label_list.append(temp_class)
             self.class2item[temp_class] = current_json['item'].split('.')[-1]
-            self.class2idx[temp_class] = i + 1
             temp_layout = QtGui.QHBoxLayout()
             temp_layout.addWidget(QtGui.QLabel(temp_class))
             self.class_text[temp_class] = QtGui.QSpinBox()

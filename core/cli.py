@@ -3,8 +3,6 @@ Labeltool command line interface
 
 This is based on django's ManagementUtility.
 """
-
-import os
 import sys
 from optparse import make_option, OptionParser
 import sloth

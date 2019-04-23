@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# _*_ coding:utf-8 _*_
 import os
 import sys
 sys.path.append('..')
@@ -25,11 +26,6 @@ with open(os.path.join(direct, 'sloth.txt'), 'w') as f:
 from sloth.core.labeltool import LabelTool
 
 if __name__ == '__main__':
-    # app = QApplication(sys.argv)
-    # app.setOrganizationName(ORGANIZATION_NAME)
-    # app.setOrganizationDomain(ORGANIZATION_DOMAIN)
-    # app.setApplicationName(APP_NAME)
-
     labeltool = LabelTool()
     labeltool.execute_from_commandline(sys.argv)
     sys.exit(app.exec_())

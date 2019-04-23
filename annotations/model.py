@@ -2,7 +2,6 @@
 The annotationmodel module contains the classes for the AnnotationModel.
 """
 import os.path
-import platform
 import time
 import logging
 import copy
