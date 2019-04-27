@@ -97,21 +97,6 @@ class MainWindow(QMainWindow):
     def is_test_mode(self):
         return self.mode.text()
 
-    def load_json(self):
-        # 获取这次配置文件的路径
-        direct = os.path.dirname(sys.argv[0])
-        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
-            label_path = f.read()
-        temp = []
-        try:
-            with open(label_path, 'r') as f:
-                temp = json5.load(f)
-        except Exception as e:
-            temp = []
-        finally:
-            LABELS = temp
-        return LABELS
-
     # Slots
     def onPluginLoaded(self, action):
         self.ui.menuPlugins.addAction(action)
@@ -672,13 +657,6 @@ class MainWindow(QMainWindow):
             item.setPen(inserter.pen())
             inserter._item = item
             self.scene.addItem(item)
-            # inserter._updateAnnotation()
-            # if inserter._commit:
-            #     self.scene._image_item.addAnnotation(inserter._ann)
-            # inserter.annotationFinished.emit()
-            # self.scene.removeItem(item)
-            # inserter._item = None
-            # inserter.inserterFinished.emit()
 
     # 撤回
     def undo(self):
@@ -710,7 +688,7 @@ class MainWindow(QMainWindow):
         if open_path not in self._item_dir:
             self._item_dir[open_path] = []
         self.treeview.setCurrentIndex(last_child)
-        config = self.load_json()
+        config = Main.get_json()
         item_type = None
         for current_json in config:
             if current_json['attributes']['class'] == last_child.data():

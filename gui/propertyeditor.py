@@ -305,6 +305,64 @@ class LabelEditor(QScrollArea):
         return self._insertion_mode
 
 
+class InitSelectDialog(QDialog):
+    def __init__(self, func, parent=None):
+        super(InitSelectDialog, self).__init__(parent)
+        self.func = func
+        self.setupUi()
+
+    def get_state(self):
+        cnt = 0
+        state = {}
+        for k, v in self.class_check.items():
+            if v.isChecked():
+                cnt += 1
+                state[k] = cnt
+            else:
+                state[k] = 0
+        return state
+
+    def setupUi(self):
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        json_conf = Main.get_json()
+        label_list = []
+        for current_json in json_conf:
+            label_list.append(current_json['attributes']['class'])
+
+        self._parea = QWidget()
+        self._classbox = QScrollArea()
+        self._classbox_layout = QVBoxLayout()
+        self._parea.setLayout(self._classbox_layout)
+        self._parea.setGeometry(0, 0, len(label_list) * 35, 400)
+        self._classbox.setWidget(self._parea)
+        self._classbox.setGeometry(0, 0, 200, 300)
+
+        layout.addWidget(self._classbox)
+
+        self.class_check = {}
+        for label in label_list:
+            self.class_check[label] = QtGui.QCheckBox(label)
+            self._classbox_layout.addWidget(self.class_check[label])
+
+        self.ok_btn = QPushButton('确认')
+        self.ok_btn.clicked.connect(self.close)
+        layout.addWidget(self.ok_btn)
+
+    # 关闭事件
+    def closeEvent(self, event):
+        reply = QtGui.QMessageBox.question(self,
+                                           "确认",
+                                           "确定好了吗",
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.Cancel)
+        if reply == QtGui.QMessageBox.Yes:
+            self.func(self.get_state())
+        elif reply == QtGui.QMessageBox.No:
+            self.func(None)
+        else:
+            event.ignore()
+
+
 # 批量修改对话框
 class MultiSelectDialog(QDialog):
     def __init__(self, label_list, setGray, parent=None):
@@ -427,6 +485,13 @@ class TrainDialog(QDialog):
                            split_ratio=split_ratio, do_shuffle=do_shuffle, multiply_flag=multiply_flag,
                            enable_all_zero=enable_all_zero)
 
+    def get_init_data(self, temp):
+        self.init_dict=temp
+
+    def get_init(self):
+        temp = InitSelectDialog(self.get_init_data, self)
+        temp.exec_()
+
     # 批量修改
     def modify(self):
         temp = MultiSelectDialog(self.label_list, self.setGray, self)
@@ -437,6 +502,8 @@ class TrainDialog(QDialog):
             self.class_text[k].setValue(v)
 
     def setupUi(self):
+        self.get_init()
+
         self.setWindowTitle('训练数据生成')
         self._train_layout = QVBoxLayout()
         self.setLayout(self._train_layout)
@@ -489,13 +556,7 @@ class TrainDialog(QDialog):
         self._train_layout.addWidget(self._file_button)
 
         self.label_list = []
-        # 获取这次配置文件的路径
-        direct = os.path.dirname(sys.argv[0])
-        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
-            label_path = f.read()
-        # 读取配置文件
-        with open(label_path, 'r') as f:
-            json_conf = json5.load(f)
+        json_conf = Main.get_json()
         # 缺陷对应图形
         self.class2item = {}
         # 缺陷的数值
@@ -505,7 +566,7 @@ class TrainDialog(QDialog):
         self._classbox = QScrollArea()
         self._classbox_layout = QVBoxLayout()
         self._parea.setLayout(self._classbox_layout)
-        self._parea.setGeometry(0, 0, len(json_conf)*35, 400)
+        self._parea.setGeometry(0, 0, len(json_conf) * 35, 400)
         self._classbox.setWidget(self._parea)
         self._classbox.setGeometry(0, 0, 200, 300)
 
@@ -520,7 +581,10 @@ class TrainDialog(QDialog):
             self.class_text[temp_class] = QtGui.QSpinBox()
             self.class_text[temp_class].setMinimum(0)
             self.class_text[temp_class].setMaximum(255)
-            self.class_text[temp_class].setValue(i + 1)
+            if self.init_dict is None:
+                self.class_text[temp_class].setValue(i + 1)
+            else:
+                self.class_text[temp_class].setValue(self.init_dict[temp_class])
             temp_layout.addWidget(self.class_text[temp_class])
             self._classbox_layout.addLayout(temp_layout)
 

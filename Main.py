@@ -3,6 +3,8 @@
 from datetime import datetime
 import json
 import os
+import sys
+import json5
 
 
 def contains_defect(annotations, defect_type):
@@ -53,7 +55,7 @@ def write_txt(json_directory, defect, txt_path):
     if not os.path.exists(directory):
         os.makedirs(directory)
     with open(os.path.join(directory,
-                           '.'.join(defect)+'_'+datetime.now().strftime('%Y_%m_%d_%H_%M_%S') + '.txt'), 'w') as f:
+                           '.'.join(defect) + '_' + datetime.now().strftime('%Y_%m_%d_%H_%M_%S') + '.txt'), 'w') as f:
         for picture in pictures:
             f.write(picture + '\n')
 
@@ -74,3 +76,22 @@ def get_merged_pictures(pictures_path, key_word='merge', extension=None):
                 if extension is None or temp[1].lower() == '.' + extension:
                     pictures_list.append(os.path.abspath(os.path.join(root, file)))
     return pictures_list
+
+
+def get_json():
+    """
+    获取这次配置文件
+    :return: 配置文件
+    """
+    # 获取这次配置文件的路径
+    direct = os.path.dirname(sys.argv[0])
+    try:
+        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+            label_path = f.read()
+        # 读取配置文件
+        with open(label_path, 'r') as f:
+            json_conf = json5.load(f)
+        return json_conf
+    except Exception as e:
+        print(e)
+        return []

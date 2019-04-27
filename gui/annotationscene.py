@@ -1,7 +1,5 @@
 """This is the AnnotationScene module"""
-import os
-import sys
-import json5
+import sloth.Main as Main
 from sloth.items import *
 from sloth.core.exceptions import InvalidArgumentException
 from sloth.annotations.model import AnnotationModelItem
@@ -145,18 +143,7 @@ class AnnotationScene(QGraphicsScene):
 
     def get_color_brush_by_label_class(self, label_class):
         # 获取这次配置文件的路径
-        direct = os.path.dirname(sys.argv[0])
-        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
-            label_path = f.read()
-        temp = []
-        try:
-            with open(label_path, 'r') as f:
-                temp = json5.load(f)
-        except Exception as e:
-            temp = []
-            print(e)
-        finally:
-            LABELS = temp
+        LABELS = Main.get_json()
         for current_json in LABELS:
             try:
                 if current_json['attributes']['class'] == label_class:
@@ -224,7 +211,7 @@ class AnnotationScene(QGraphicsScene):
             LOG.debug("mousePressEvent %s %s" % (self.sceneRect().contains(event.scenePos()), event.scenePos()))
             if self._inserter is not None:
                 if not self.sceneRect().contains(event.scenePos()) and \
-                    not self._inserter.allowOutOfSceneEvents():
+                        not self._inserter.allowOutOfSceneEvents():
                     # ignore events outside the scene rect
                     return
                 # insert mode
@@ -237,7 +224,7 @@ class AnnotationScene(QGraphicsScene):
         LOG.debug("mouseDoubleClickEvent %s %s" % (self.sceneRect().contains(event.scenePos()), event.scenePos()))
         if self._inserter is not None:
             if not self.sceneRect().contains(event.scenePos()) and \
-                not self._inserter.allowOutOfSceneEvents():
+                    not self._inserter.allowOutOfSceneEvents():
                 # ignore events outside the scene rect
                 return
             # insert mode
