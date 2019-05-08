@@ -1,16 +1,17 @@
 # -*- mode: python -*-
-
+# _*_ coding:utf-8 _*_
+import os
 block_cipher = None
 
-
+anaconda_sloth=r'D:\Anaconda3\Lib\site-packages\sloth'
 a = Analysis(['sloth'],
-             pathex=['E:\\sloth\\bin'],
-             binaries=[('D:\\api-ms-win-downlevel-shlwapi-l1-1-0.dll', '.'),
-                       ('D:\\IEShims.dll', '.')],
-             datas=[('E:\\sloth\\gui\\labeltool.ui','sloth\\gui\\'),
-                    ('E:\\sloth\\gui\\icons.qrc','sloth\\gui\\'),
-                    ('E:\\sloth\\gui\\icons\\*','sloth\\gui\\icons\\'),
-                    ('E:\\sloth\\conf\\config.json','sloth\\conf\\')],
+             pathex=[os.path.join(anaconda_sloth,'bin')],
+             binaries=[(os.path.join(anaconda_sloth,'api-ms-win-downlevel-shlwapi-l1-1-0.dll'), '.'),
+                       (os.path.join(anaconda_sloth,'IEShims.dll'), '.')],
+             datas=[(os.path.join(anaconda_sloth,r'gui\labeltool.ui'),'sloth\\gui\\'),
+                    (os.path.join(anaconda_sloth,r'gui\icons.qrc'),'sloth\\gui\\'),
+                    (os.path.join(anaconda_sloth,r'gui\icons\*'),'sloth\\gui\\icons\\'),
+                    (os.path.join(anaconda_sloth,r'conf\config.json'),'sloth\\conf\\')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
