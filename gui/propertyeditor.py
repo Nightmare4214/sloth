@@ -486,7 +486,7 @@ class TrainDialog(QDialog):
                            enable_all_zero=enable_all_zero)
 
     def get_init_data(self, temp):
-        self.init_dict=temp
+        self.init_dict = temp
 
     def get_init(self):
         temp = InitSelectDialog(self.get_init_data, self)
@@ -624,6 +624,8 @@ class PropertyEditor(QWidget):
         self._attribute_handlers = {}
         self._handler_factory = AttributeHandlerFactory()
 
+        self.hotkey_dict = {}
+
         self._setupGUI()
         self._parea.setGeometry(0, 0, 200, 0)
         # Add label classes from config
@@ -641,6 +643,7 @@ class PropertyEditor(QWidget):
             f.write(configs_path)
         self._parea.setGeometry(0, 0, 200, 0)
         for temp_json in configs:
+
             self.addLabelClass(temp_json)
             # 注册
             self._register('inserter', temp_json['attributes']['class'], temp_json['inserter'])
@@ -649,6 +652,16 @@ class PropertyEditor(QWidget):
             self.combo_box.addItem(temp_json['attributes']['class'])
             self.items.append(temp_json['attributes']['class'])
             cf.LABELS.append(temp_json)
+            # if temp_json['hotkey'] in self.hotkey_dict:
+            #     hotkey, pre_hotkey_button = self.hotkey_dict[temp_json['hotkey']]
+            #     hotkey.activated.disconnect(pre_hotkey_button.click)
+            #     hotkey.activated.connect(button.click)
+            #     self.hotkey_dict[temp_json['hotkey']][1] = button
+            # else:
+            #     hotkey = QShortcut(QKeySequence(temp_json['hotkey']), self)
+            #     hotkey.activated.connect(button.click)
+            #     self.hotkey_dict[temp_json['hotkey']] = [hotkey, button]
+            # self._class_shortcuts[temp_json['attributes']['class']] = temp_json['hotkey']
 
     def onModelChanged(self, new_model):
         attrs = set([k for k, v in self._attribute_handlers.items() if v.autoAddEnabled()])
@@ -675,6 +688,10 @@ class PropertyEditor(QWidget):
 
     # 删除所有的item
     def remove_all_item(self):
+        for shortcut in set(self._class_shortcuts.values()):
+            hotkey, pre_hotkey_button = self.hotkey_dict[shortcut]
+            hotkey.activated.disconnect(pre_hotkey_button.click)
+        self.hotkey_dict.clear()
         self._class_shortcuts.clear()
         self._class_context.clear()
         self._class_action.clear()
@@ -696,6 +713,10 @@ class PropertyEditor(QWidget):
         try:
             # 删除
             if label_class in self._class_shortcuts:
+                hotkey, pre_hotkey_button = self.hotkey_dict[self._class_shortcuts[label_class]]
+                hotkey.activated.disconnect(pre_hotkey_button.click)
+                del self.hotkey_dict[self._class_shortcuts[label_class]]
+
                 del self._class_shortcuts[label_class]
             del self._class_context[label_class]
             del self._class_action[label_class]
@@ -768,9 +789,16 @@ class PropertyEditor(QWidget):
 
         # Add hotkey
         if 'hotkey' in label_config:
-            hotkey = QShortcut(QKeySequence(label_config['hotkey']), self)
-            hotkey.activated.connect(button.click)
-            self._class_shortcuts[label_class] = hotkey
+            if label_config['hotkey'] in self.hotkey_dict:
+                hotkey, pre_hotkey_button = self.hotkey_dict[label_config['hotkey']]
+                hotkey.activated.disconnect(pre_hotkey_button.click)
+                hotkey.activated.connect(button.click)
+                self.hotkey_dict[label_config['hotkey']][1] = button
+            else:
+                hotkey = QShortcut(QKeySequence(label_config['hotkey']), self)
+                hotkey.activated.connect(button.click)
+                self.hotkey_dict[label_config['hotkey']] = [hotkey, button]
+            self._class_shortcuts[label_class] = label_config['hotkey']
 
     def parseConfiguration(self, label_class, label_config):
         attrs = label_config['attributes']
