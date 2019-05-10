@@ -312,7 +312,7 @@ class LabelTool(QObject):
                         temp = copy.copy(annotation)
                         # 不要空的json
                         if temp['annotations'] is None or len(temp['annotations']) < 1:
-                            return
+                            continue
                         # 图片名称
                         filename = temp['filename']
                         # 图片目录
