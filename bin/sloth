@@ -2,12 +2,15 @@
 # _*_ coding:utf-8 _*_
 import os
 import sys
+import sloth.Main as Main
+import json5
+
 sys.path.append('..')
 from os.path import dirname, realpath
-sys.path.insert(1, dirname(dirname(dirname(realpath(__file__)))))
-from PyQt4.QtGui import QApplication, QFileDialog
-from sloth import APP_NAME, ORGANIZATION_NAME, ORGANIZATION_DOMAIN
 
+sys.path.insert(1, dirname(dirname(dirname(realpath(__file__)))))
+from PyQt4.QtGui import QApplication, QFileDialog, QMessageBox
+from sloth import APP_NAME, ORGANIZATION_NAME, ORGANIZATION_DOMAIN
 
 app = QApplication(sys.argv)
 app.setOrganizationName(ORGANIZATION_NAME)
@@ -15,17 +18,46 @@ app.setOrganizationDomain(ORGANIZATION_DOMAIN)
 app.setApplicationName(APP_NAME)
 jsons_type = ['*.json']
 format_str = ' '.join(jsons_type)
-fname = QFileDialog.getOpenFileName(QFileDialog(), "%s - Select Config File" % APP_NAME, '.',
-                                    "Json files (%s)" % (format_str,))
-print('select_json',fname)
+start=os.path.dirname(__file__)
+if os.path.exists(os.path.join(start, 'sloth', 'conf')):
+    start = os.path.join(start, 'sloth', 'conf')
+elif os.path.exists(os.path.join(start, '..', 'conf')):
+    start = os.path.join(start, '..', 'conf')
+else:
+    start = '.'
+start = os.path.abspath(start)
+
+fname = QFileDialog.getOpenFileName(None, caption="%s - Select Config File" % APP_NAME, directory= start,
+                                    filter="Json files (%s)" % (format_str,))
+print('select_json', fname)
 print('sys.argv[0]', sys.argv[0])
 # 在sloth.txt中写入这次配置文件的路径
 direct = os.path.dirname(sys.argv[0])
 with open(os.path.join(direct, 'sloth.txt'), 'w') as f:
     f.write(fname)
-from sloth.core.labeltool import LabelTool
+try:
+    from sloth.core.labeltool import LabelTool
+except Exception as e:
+    print(e)
+    exit(-1)
 
 if __name__ == '__main__':
     labeltool = LabelTool()
-    labeltool.execute_from_commandline(sys.argv)
+    try:
+        labeltool.execute_from_commandline(sys.argv)
+        direct = os.path.dirname(sys.argv[0])
+        with open(os.path.join(direct, 'sloth.txt'), 'r') as f:
+            label_path = f.read()
+        # 读取配置文件
+        with open(label_path, 'r') as f:
+            json_array = json5.load(f)
+        if not Main.isConfig(json_array):
+            raise Exception('error json')
+    except Exception as e:
+        QMessageBox.warning(None, "Warning",
+                            '配置文件错误或者为空,即将关闭程序',
+                            QMessageBox.Ok)
+        print(e)
+        # os._exit(-1)
+        sys.exit(-1)
     sys.exit(app.exec_())

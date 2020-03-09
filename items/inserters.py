@@ -376,7 +376,7 @@ class PolygonItemInserter(ItemInserter):
         self._item = None
         self._scene.clearMessage()
 
-        self.inserterFinished.emit()
+        # self.inserterFinished.emit()
 
     def mousePressEvent(self, event, image_item):
         pos = event.scenePos()
@@ -387,7 +387,7 @@ class PolygonItemInserter(ItemInserter):
             self._item.setPen(self.pen())
             self._scene.addItem(item)
 
-            self._scene.setMessage("Press Enter to finish the polygon.")
+            # self._scene.setMessage("Press Enter to finish the polygon.")
 
         polygon = self._item.polygon()
         polygon.append(pos)
@@ -434,15 +434,20 @@ class PolygonItemInserter(ItemInserter):
             modifiers = event.modifiers()
             if modifiers & Qt.ControlModifier:
                 uKey += Qt.Key_Control
+            if modifiers & Qt.AltModifier:
+                uKey += Qt.Key_Alt
             # print('uKey', uKey)
             # 按点撤回
-            # if (uKey == Qt.Key_Z + Qt.Key_Control) \
-            #     and self._item is not None:
-            #     polygon = self._item.polygon()
-            #     if polygon.size() == 1:
-            #         event.ignore()
-            #     polygon = polygon[0:-1]
-            #     self._item.setPolygon(polygon)
+            if (uKey == Qt.Key_Z + Qt.Key_Alt +  Qt.Key_Control) \
+                and self._item is not None:
+                polygon = self._item.polygon()
+                if polygon.size() == 1:
+                    self._scene._inserter.abort()
+                    self._scene._inserter = None
+                    del self
+                    return
+                polygon = polygon[0:-1]
+                self._item.setPolygon(polygon)
 
     def abort(self):
         if self._item is not None:

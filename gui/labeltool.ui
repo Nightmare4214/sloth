@@ -46,6 +46,7 @@
     <addaction name="actionAdd_Json"/>
     <addaction name="separator"/>
     <addaction name="actionChange_Config"/>
+    <addaction name="actionDelete_all"/>
    </widget>
    <widget class="QMenu" name="menu_Views">
     <property name="title">
@@ -382,6 +383,11 @@
   <action name="actionChange_Config">
    <property name="text">
     <string>Change Config</string>
+   </property>
+  </action>
+  <action name="actionDelete_all">
+   <property name="text">
+    <string>delete all</string>
    </property>
   </action>
  </widget>

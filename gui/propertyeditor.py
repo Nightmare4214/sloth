@@ -6,7 +6,7 @@ import logging
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import pyqtSignal, QSize, Qt, QRegExp
 from PyQt4.QtGui import QWidget, QGroupBox, QVBoxLayout, QPushButton, QScrollArea, QLineEdit, QDoubleValidator, \
-    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor, QRegExpValidator, QDialog
+    QIntValidator, QShortcut, QKeySequence, QComboBox, QFileDialog, QCursor, QRegExpValidator, QDialog, QMessageBox
 from sloth.core.exceptions import ImproperlyConfigured
 from sloth.annotations.model import AnnotationModelItem
 from sloth.gui.floatinglayout import FloatingLayout
@@ -305,13 +305,20 @@ class LabelEditor(QScrollArea):
         return self._insertion_mode
 
 
+# 初始化缺陷选择对话框
 class InitSelectDialog(QDialog):
     def __init__(self, func, parent=None):
         super(InitSelectDialog, self).__init__(parent)
+        # 传递函数
         self.func = func
         self.setupUi()
 
+    # 获得每一个缺陷的值
     def get_state(self):
+        """
+        获得每一个缺陷的值
+        :return: {缺陷->值}
+        """
         cnt = 0
         state = {}
         for k, v in self.class_check.items():
@@ -355,9 +362,9 @@ class InitSelectDialog(QDialog):
                                            "确认",
                                            "确定好了吗",
                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No | QtGui.QMessageBox.Cancel)
-        if reply == QtGui.QMessageBox.Yes:
+        if QtGui.QMessageBox.Yes == reply:
             self.func(self.get_state())
-        elif reply == QtGui.QMessageBox.No:
+        elif QtGui.QMessageBox.No == reply:
             self.func(None)
         else:
             event.ignore()
@@ -460,10 +467,16 @@ class TrainDialog(QDialog):
         # 训练源
         search_name = self._image_label.text()
         if search_name is None or search_name == '':
+            QtGui.QMessageBox.warning(self, "Warning",
+                                      '训练源不能为空',
+                                      QtGui.QMessageBox.Ok)
             return
         # 生成目录
         search_dir = self._collect_label.text()
         if search_dir is None or search_dir == '':
+            QtGui.QMessageBox.warning(self, "Warning",
+                                      '采图夹不能为空',
+                                      QtGui.QMessageBox.Ok)
             return
         # 训练集所占比例
         split_ratio = self._spin_box.value() / 100
@@ -477,13 +490,14 @@ class TrainDialog(QDialog):
         if save_dir == '':
             return
         class2label = {}
+        only_top=self._onlyTop.isChecked()
         for k, v in self.class_text.items():
             if v == 0:
                 continue
             class2label[k] = v.value()
         ex.generate_sample(search_dir, search_name, save_dir, class2label, self.class2item,
                            split_ratio=split_ratio, do_shuffle=do_shuffle, multiply_flag=multiply_flag,
-                           enable_all_zero=enable_all_zero)
+                           enable_all_zero=enable_all_zero,only_top=only_top)
 
     def get_init_data(self, temp):
         self.init_dict = temp
@@ -535,6 +549,9 @@ class TrainDialog(QDialog):
         self._multiply = QtGui.QCheckBox("255 / max(class2label.values())")
         # 允许全0的图片
         self._enable_zero = QtGui.QCheckBox('允许全0的图片')
+        # 只搜索最外层
+        self._onlyTop=QtGui.QCheckBox("只搜索最顶层")
+        self._onlyTop.setChecked(True)
         # 选择文件夹
         self._file_button = QPushButton('生成')
         self._file_button.clicked.connect(self.generate)
@@ -553,6 +570,7 @@ class TrainDialog(QDialog):
         self._train_layout.addWidget(self._shuffle)
         self._train_layout.addWidget(self._multiply)
         self._train_layout.addWidget(self._enable_zero)
+        self._train_layout.addWidget(self._onlyTop)
         self._train_layout.addWidget(self._file_button)
 
         self.label_list = []
@@ -589,7 +607,7 @@ class TrainDialog(QDialog):
             self._classbox_layout.addLayout(temp_layout)
 
 
-brush2idx = {'Qt.NoBrush': 0,
+brush2idx = {'Default': 0,
              'Qt.SolidPattern': 1,
              'Qt.Dense1Pattern': 2,
              'Qt.Dense2Pattern': 3,
@@ -624,10 +642,12 @@ class PropertyEditor(QWidget):
         self._attribute_handlers = {}
         self._handler_factory = AttributeHandlerFactory()
 
-        self.hotkey_dict = {}
-
         self._setupGUI()
         self._parea.setGeometry(0, 0, 200, 0)
+        # (快捷键,button)
+        self.shortcut2button = {}
+        # (button,快捷键)
+        self.label2shortcut = {}
         # Add label classes from config
         for label in config:
             self.addLabelClass(label)
@@ -643,7 +663,6 @@ class PropertyEditor(QWidget):
             f.write(configs_path)
         self._parea.setGeometry(0, 0, 200, 0)
         for temp_json in configs:
-
             self.addLabelClass(temp_json)
             # 注册
             self._register('inserter', temp_json['attributes']['class'], temp_json['inserter'])
@@ -652,16 +671,6 @@ class PropertyEditor(QWidget):
             self.combo_box.addItem(temp_json['attributes']['class'])
             self.items.append(temp_json['attributes']['class'])
             cf.LABELS.append(temp_json)
-            # if temp_json['hotkey'] in self.hotkey_dict:
-            #     hotkey, pre_hotkey_button = self.hotkey_dict[temp_json['hotkey']]
-            #     hotkey.activated.disconnect(pre_hotkey_button.click)
-            #     hotkey.activated.connect(button.click)
-            #     self.hotkey_dict[temp_json['hotkey']][1] = button
-            # else:
-            #     hotkey = QShortcut(QKeySequence(temp_json['hotkey']), self)
-            #     hotkey.activated.connect(button.click)
-            #     self.hotkey_dict[temp_json['hotkey']] = [hotkey, button]
-            # self._class_shortcuts[temp_json['attributes']['class']] = temp_json['hotkey']
 
     def onModelChanged(self, new_model):
         attrs = set([k for k, v in self._attribute_handlers.items() if v.autoAddEnabled()])
@@ -684,17 +693,16 @@ class PropertyEditor(QWidget):
 
     # 设置右键菜单所在位置
     def showContextMenu(self, label_class):
-        self._class_context[label_class].exec_(QCursor.pos())
+        self.label_menu[label_class].exec_(QCursor.pos())
 
     # 删除所有的item
     def remove_all_item(self):
-        for shortcut in set(self._class_shortcuts.values()):
-            hotkey, pre_hotkey_button = self.hotkey_dict[shortcut]
-            hotkey.activated.disconnect(pre_hotkey_button.click)
-        self.hotkey_dict.clear()
-        self._class_shortcuts.clear()
-        self._class_context.clear()
-        self._class_action.clear()
+        for v in self.shortcut2button.values():
+            v.setShortcut(QKeySequence())
+        self.shortcut2button.clear()
+        self.label2shortcut.clear()
+        self.label_menu.clear()
+        self.label_action.clear()
         self._class_config.clear()
         self.combo_box.clear()
         self.items.clear()
@@ -710,16 +718,24 @@ class PropertyEditor(QWidget):
 
     # 删除标签
     def remove_item(self, label_class):
+        """
+        删除标签
+        :param label_class: 删除的标签名字
+        """
         try:
-            # 删除
-            if label_class in self._class_shortcuts:
-                hotkey, pre_hotkey_button = self.hotkey_dict[self._class_shortcuts[label_class]]
-                hotkey.activated.disconnect(pre_hotkey_button.click)
-                del self.hotkey_dict[self._class_shortcuts[label_class]]
-
-                del self._class_shortcuts[label_class]
-            del self._class_context[label_class]
-            del self._class_action[label_class]
+            # 删除快捷键
+            self.endInsertionMode()
+            shortcut = self.label2shortcut[label_class]
+            if shortcut in self.shortcut2button and \
+                    self.shortcut2button[shortcut] is not None and \
+                    self.shortcut2button[shortcut] == self._class_buttons[label_class]:
+                self.shortcut2button[shortcut].setShortcut(QKeySequence())
+                del self.shortcut2button[shortcut]
+            # 删除菜单
+            del self.label_menu[label_class]
+            # 删除菜单的动作
+            del self.label_action[label_class]
+            # 删除视图中的按钮
             self._classbox_layout.removeWidget(self._class_buttons[label_class])
             self._class_buttons[label_class].deleteLater()
             self._class_buttons[label_class] = None
@@ -746,14 +762,20 @@ class PropertyEditor(QWidget):
                         break
 
                 with open(label_path, 'w') as f:
-                    json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
+                    json5.dump(temp, f, quote_keys=True, trailing_commas=False, indent=4, separators=(',', ': '),
+                               sort_keys=True, ensure_ascii=False)
                 self._parea.setGeometry(0, 0, 200, max(self._parea.geometry().height() - 40, 60))
             except Exception as e:
                 print(e)
         except Exception as e:
             print(e)
 
+    # 添加标签
     def addLabelClass(self, label_config):
+        """
+        添加标签
+        :param label_config: 标签的json
+        """
         # Check label configuration
         if 'attributes' not in label_config:
             raise ImproperlyConfigured("Label with no 'attributes' dict found")
@@ -781,24 +803,23 @@ class PropertyEditor(QWidget):
         self._classbox_layout.addWidget(button)
 
         # 添加右键菜单
-        self._class_context[label_class] = QtGui.QMenu(self)
-        self._class_action[label_class] = self._class_context[label_class].addAction('删除')
-        self._class_action[label_class].triggered.connect(bind(self.remove_item, label_class))
+        self.label_menu[label_class] = QtGui.QMenu(self)
+        self.label_action[label_class] = self.label_menu[label_class].addAction('删除')
+        self.label_action[label_class].triggered.connect(bind(self.remove_item, label_class))
         self._class_buttons[label_class].setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self._class_buttons[label_class].customContextMenuRequested.connect(bind(self.showContextMenu, label_class))
 
         # Add hotkey
         if 'hotkey' in label_config:
-            if label_config['hotkey'] in self.hotkey_dict:
-                hotkey, pre_hotkey_button = self.hotkey_dict[label_config['hotkey']]
-                hotkey.activated.disconnect(pre_hotkey_button.click)
-                hotkey.activated.connect(button.click)
-                self.hotkey_dict[label_config['hotkey']][1] = button
-            else:
-                hotkey = QShortcut(QKeySequence(label_config['hotkey']), self)
-                hotkey.activated.connect(button.click)
-                self.hotkey_dict[label_config['hotkey']] = [hotkey, button]
-            self._class_shortcuts[label_class] = label_config['hotkey']
+            # 快捷键
+            hotkey = label_config['hotkey']
+            # 快捷键已经存在，那就去掉原来的
+            if hotkey in self.shortcut2button and self.shortcut2button[hotkey] is not None:
+                self.shortcut2button[hotkey].setShortcut(QKeySequence())
+            # 设置快捷键
+            button.setShortcut(QKeySequence(hotkey))
+            self.shortcut2button[hotkey] = button
+            self.label2shortcut[label_class] = hotkey
 
     def parseConfiguration(self, label_class, label_config):
         attrs = label_config['attributes']
@@ -883,6 +904,10 @@ class PropertyEditor(QWidget):
 
     # 添加txt
     def add_txt(self):
+        if not Main.isConfig(Main.get_json()):
+            QMessageBox.warning(self, "Warning",
+                                '当前的配置文件错误或者为空,无法添加txt',
+                                QMessageBox.Ok)
         defect = self.combo_box.currentText()
         if defect is None or defect == '':
             return
@@ -921,8 +946,11 @@ class PropertyEditor(QWidget):
 
     # 生成训练数据
     def generate(self):
-        # a = trainDialog(self.items, self)
-        # a.exec_()
+        if not Main.isConfig(Main.get_json()):
+            QMessageBox.warning(self, "Warning",
+                                '配置文件错误或者为空，无法生成训练数据',
+                                QMessageBox.Ok)
+            return
         a = TrainDialog(self)
         a.exec_()
 
@@ -968,13 +996,18 @@ class PropertyEditor(QWidget):
             temp.append(temp_json)
             # 写入
             with open(label_path, 'w') as f:
-                json5.dump(temp, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
+                json5.dump(temp, f, quote_keys=True, trailing_commas=False, indent=4, separators=(',', ': '),
+                           sort_keys=True, ensure_ascii=False)
         except Exception as e:
             print(e)
 
     # 添加标签
     def add_attributes(self):
-        print('faQ_add_attributes')
+        if not Main.isConfig(Main.get_json()):
+            QMessageBox.warning(self, "Warning",
+                                '当前配置文件错误或者为空，不能添加标签',
+                                QMessageBox.Ok)
+            return
         # 转换dict
         type_dict = {'Rect': ('sloth.items.RectItem', 'sloth.items.RectItemInserter'),
                      'Point': ('sloth.items.PointItem', 'sloth.items.PointItemInserter'),
@@ -1031,9 +1064,8 @@ class PropertyEditor(QWidget):
 
     def _setupGUI(self):
         self._class_buttons = {}
-        self._class_shortcuts = {}
-        self._class_context = {}
-        self._class_action = {}
+        self.label_menu = {}
+        self.label_action = {}
         self._label_editor = None
 
         # Label class buttons
@@ -1066,7 +1098,7 @@ class PropertyEditor(QWidget):
         self._group_box_add_files = QGroupBox('add files', self)
         # 文件名包含的
         self._key_word = QLineEdit('')
-        self._key_word.setPlaceholderText('merge')
+        self._key_word.setPlaceholderText('Second')
         # 文件类型
         self._extension = QLineEdit('')
         self._extension.setPlaceholderText('bmp')

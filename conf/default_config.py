@@ -49,6 +49,8 @@ temp = []
 try:
     with open(label_path, 'r') as f:
         temp = json5.load(f)
+    if not isinstance(temp, list):
+        temp = []
 except Exception as e:
     temp = []
     print(e)

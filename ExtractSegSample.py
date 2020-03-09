@@ -13,7 +13,7 @@ class2color = {}
 def generate_sample(search_dir, search_name, save_dir, class2label, class2item, train_name='train.txt',
                     test_name='test.txt', index_name='index.txt', split_ratio=0.8, save_cnt=1, bshow=False,
                     crop_ratio_lrtd=None, do_shuffle=True, only_defect=True, all_contain=False,
-                    multiply_flag=True, enable_all_zero=True):
+                    multiply_flag=True, enable_all_zero=True, only_top=True):
     """
         将文件夹中所有的符合的图片的json转为图片，并按比例分割成训练集和测试集
         :param search_dir: 搜索路径
@@ -49,6 +49,8 @@ def generate_sample(search_dir, search_name, save_dir, class2label, class2item, 
     json_name = os.path.splitext(search_name)[0] + '.json'
     # 遍历
     for root, dirs, files in os.walk(search_dir):
+        if only_top and root != search_dir and os.path.abspath(os.path.join(root, '..')) != search_dir:
+            continue
         for file in files:
             if file != json_name:
                 continue

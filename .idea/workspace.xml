@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="b500104d-969b-4a26-afcf-2a6ff440d510" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sloth.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sloth.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ExtractSegSample.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExtractSegSample.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/annotations/container.py" beforeDir="false" afterPath="$PROJECT_DIR$/annotations/container.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/annotations/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/annotations/model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/pack_sloth_to_exe_script.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/sloth" beforeDir="false" afterPath="$PROJECT_DIR$/bin/sloth" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/sloth.spec" beforeDir="false" afterPath="$PROJECT_DIR$/bin/sloth.spec" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/sloth.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bin/sloth.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/conf/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/conf/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/conf/default_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/conf/default_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/cli.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/cli.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/commands.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/commands.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/exceptions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/labeltool.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/labeltool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/annotationscene.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/annotationscene.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/buttonarea.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/buttonarea.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/controlbuttons.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/controlbuttons.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/floatinglayout.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/floatinglayout.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/frameviewer.py" beforeDir="false" afterPath="$PROJECT_DIR$/gui/frameviewer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/icons.qrc" beforeDir="false" afterPath="$PROJECT_DIR$/gui/icons.qrc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/icons/page_white.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/icons/page_white_text.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/icons/picture_add.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/icons/sloth.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/icons/zoom.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/icons/zoom_in.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/icons/zoom_out.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/labeltool.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/labeltool.ui" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/propertyeditor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/qrc_icons.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gui/utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/items/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/items/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/items/factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/items/factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/items/inserters.py" beforeDir="false" afterPath="$PROJECT_DIR$/items/inserters.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1Yt3skoVwshTZiG0jysXSD2eptS" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RunManager">
+    <configuration name="sloth" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="sloth" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/bin" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bin/sloth" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.sloth" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b500104d-969b-4a26-afcf-2a6ff440d510" name="Default Changelist" comment="" />
+      <created>1583748271656</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1583748271656</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1516" height="211" key="GridCell.Tab.0.bottom" timestamp="1583749092474">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1516" height="211" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1583749092474" />
+    <state width="1516" height="211" key="GridCell.Tab.0.center" timestamp="1583749092474">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1516" height="211" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1583749092474" />
+    <state width="1516" height="211" key="GridCell.Tab.0.left" timestamp="1583749092474">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1516" height="211" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1583749092474" />
+    <state width="1516" height="211" key="GridCell.Tab.0.right" timestamp="1583749092474">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1516" height="211" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1583749092474" />
+    <state x="292" y="54" key="SettingsEditor" timestamp="1583748293293">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="292" y="54" key="SettingsEditor/0.0.1536.824@0.0.1536.824" timestamp="1583748293293" />
+  </component>
+</project>

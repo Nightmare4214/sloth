@@ -1,5 +1,4 @@
-::修改为你的anaconda下的sloth的位置
-set anaconda_sloth="D:\Anaconda3\Lib\site-packages\sloth"
+set anaconda_sloth=".."
 if exist %anaconda_sloth%\bin\build (
   rmdir /S /Q %anaconda_sloth%\bin\build
 )
@@ -7,7 +6,7 @@ if exist %anaconda_sloth%\bin\dist (
   rmdir /S /Q %anaconda_sloth%\bin\dist
 )
 ::修改为最后压缩的位置
-set destination="E:\sloth_test"
+set destination="D:\sloth_test"
 pyinstaller sloth.spec
 rmdir /S /Q build
 if not exist %destination% (

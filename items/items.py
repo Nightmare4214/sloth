@@ -3,9 +3,9 @@ from PyQt4.Qt import *
 
 LOG = logging.getLogger(__name__)
 
-my_color = QColor(255, 0, 255)
-my_brush = 1
-brushes = [Qt.NoBrush,
+# my_color = QColor(255, 0, 255)
+# my_brush = 1
+brushes = [Qt.SolidPattern,
            Qt.SolidPattern,
            Qt.Dense1Pattern,
            Qt.Dense2Pattern,
@@ -130,7 +130,8 @@ class BaseItem(QAbstractGraphicsShapeItem):
             if c is not None:
                 self.setColor(c)
                 return
-        self.setColor(Qt.yellow)
+        else:
+            self.setColor(Qt.yellow)
 
     def onDataChanged(self, indexFrom, indexTo):
         # FIXME why is this not updated, when changed graphically via attribute box ?
@@ -182,17 +183,17 @@ class BaseItem(QAbstractGraphicsShapeItem):
         Qt.ConicalGradientPattern	17	Conical gradient.
         """
         global brushes
-        if 0 < idx < len(brushes):
-            return brushes[idx]
+        if 0 <= int(idx) < len(brushes):
+            return brushes[int(idx)]
         return Qt.SolidPattern
 
-    def setPen(self, pen):
-        global my_color
-        global my_brush
-        pen = my_color
-        pen = QPen(pen)  # convert to pen if argument is a QColor
-        brush = QBrush(self.idx2brush(my_brush))
-        brush.setColor(my_color)
+    def setPen(self, color, brush = Qt.SolidPattern):
+        # global my_color
+        # global my_brush
+        # pen = my_color
+        pen = QPen(color)  # convert to pen if argument is a QColor
+        brush = QBrush(brush)
+        brush.setColor(color)
         pen.setBrush(brush)
         QAbstractGraphicsShapeItem.setPen(self, pen)
 

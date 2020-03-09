@@ -166,11 +166,12 @@ class LabelTool(QObject):
                     # goto to first image
                     self.gotoNext()
                 except Exception as e:
-                    LOG.fatal("Error loading annotations: %s" % e)
-                    if (int(options.verbosity)) > 1:
-                        raise
-                    else:
-                        sys.exit(1)
+                    sys.exit(1)
+                    # LOG.fatal("Error loading annotations: %s" % e)
+                    # if (int(options.verbosity)) > 1:
+                    #     raise
+                    # else:
+                    #     sys.exit(1)
             else:
                 self.clearAnnotations()
 
@@ -190,7 +191,7 @@ class LabelTool(QObject):
             klass = app_name
         else:
             # TODO implement load_command_class
-            klass = load_command_class(app_name, subcommand)
+            klass = self.load_command_class(app_name, subcommand)
 
         # set labeltool reference
         klass.labeltool = self
@@ -292,6 +293,9 @@ class LabelTool(QObject):
                             # 图片目录
                             directory = os.path.dirname(os.path.abspath(filename))
                             json_name = os.path.splitext(os.path.basename(filename))[0] + '.json'
+                            flag = True
+                            if not os.path.exists(os.path.join(directory, json_name)):
+                                flag = False
                             annotation['filename'] = os.path.basename(filename)
                             self._container.save([annotation], os.path.join(directory, json_name))
                             annotation['filename'] = os.path.join('..', os.path.basename(filename))
@@ -304,6 +308,9 @@ class LabelTool(QObject):
                                             os.path.join(directory, 'test_Images'),
                                             font_size=30)
                             print('convert to jpg', time.time() - end_save_json)
+                            # 测试模式原路径json
+                            if not flag:
+                                os.remove(os.path.join(directory, json_name))
 
                 else:
                     # 遍历json，找到图片对应的部分，然后分别生成图片对应的json
@@ -515,7 +522,7 @@ class LabelTool(QObject):
 
     def selectPreviousAnnotation(self):
         if self._mainwindow is not None:
-            return self._mainwindow.scene.selectNextItem(reverse=True)
+            return self._mainwindow.scene.selectNextItem(reverse=False)
 
     def selectAllAnnotations(self):
         if self._mainwindow is not None:

@@ -16,7 +16,7 @@ class AnnotationScene(QGraphicsScene):
     mousePress = pyqtSignal()
     mouseRelease = pyqtSignal()
 
-    def __init__(self, labeltool, items=None, inserters=None, parent=None):
+    def __init__(self, labeltool, property_editor, items=None, inserters=None, parent=None):
         super(AnnotationScene, self).__init__(parent)
         self._model = None
         self._image_item = None
@@ -24,6 +24,7 @@ class AnnotationScene(QGraphicsScene):
         self._scene_item = None
         self._message = ""
         self._labeltool = labeltool
+        self._property_editor = property_editor
 
         self._itemfactory = Factory(items)
         self._inserterfactory = Factory(inserters)
@@ -34,6 +35,7 @@ class AnnotationScene(QGraphicsScene):
             self.setBackgroundBrush(Qt.darkGray)
         self.reset()
         self.color_dir = {}
+        self.model_index = None
 
     def add_label(self, _type, label_type, item):
         if _type == 'inserter':
@@ -120,12 +122,17 @@ class AnnotationScene(QGraphicsScene):
                 LOG.debug(
                     'Could not find key class in annotation item. Skipping this item. Please check your label file.')
                 continue
-            items.my_color, items.my_brush = self.get_color_brush_by_label_class(label_class)
+            # items.my_color, items.my_brush = self.get_color_brush_by_label_class(label_class)
+            color, brush = self.get_color_brush_by_label_class(label_class)
             item = self._itemfactory.create(label_class, child)
             if item is not None:
+                brush = QBrush(item.idx2brush(brush))
+                item.setPen(color, brush)
                 self.addItem(item)
             else:
                 LOG.debug("Could not find item for annotation with class '%s'" % label_class)
+            if isinstance(item, PolygonItem):
+                self._property_editor.endInsertionMode()
 
     def deleteSelectedItems(self):
         # some (graphics) items may share the same model item
@@ -166,6 +173,7 @@ class AnnotationScene(QGraphicsScene):
         default_properties = self._labeltool.propertyeditor().currentEditorProperties()
         items.my_color, items.my_brush = self.get_color_brush_by_label_class(label_class)
         inserter = self._inserterfactory.create(label_class, self._labeltool, self, default_properties)
+
         if inserter is None:
             raise InvalidArgumentException("Could not find inserter for class '%s' with default properties '%s'" % (
                 label_class, default_properties))
@@ -295,7 +303,7 @@ class AnnotationScene(QGraphicsScene):
     #
     # key event handlers
     #
-    def selectNextItem(self, reverse=False):
+    def selectNextItem(self, reverse=True):
         # disable inserting
         # TODO: forward this to the ButtonArea
         self._inserter = None
@@ -355,6 +363,8 @@ class AnnotationScene(QGraphicsScene):
             elif len(self.selectedItems()) > 0:
                 for item in self.selectedItems():
                     item.keyPressEvent(event)
+                event.accept()
+                return
 
         QGraphicsScene.keyPressEvent(self, event)
 

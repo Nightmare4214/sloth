@@ -59,6 +59,45 @@ def write_txt(json_directory, defect, txt_path):
         for picture in pictures:
             f.write(picture + '\n')
 
+def isConfig(configure : list):
+    inserterValue = ["sloth.items.RectItemInserter", "sloth.items.PointItemInserter","sloth.items.PolygonItemInserter"]
+    itemValue = ["sloth.items.RectItem", "sloth.items.PointItem","sloth.items.PolygonItem"]
+    valueList = []
+    try:
+        if not isinstance(configure, list) or len(configure)<1:
+            return False
+        for item in configure:
+            if not {'attributes','inserter', 'item', 'color', 'brush', 'text'}.issubset(set(item.keys())):
+                return False
+            for key,value in item.items():
+                if 'attributes' == key:
+                    if 'class' not in value or value['class'] in valueList:
+                        return False
+                    valueList.append(value['class'])
+                elif 'brush' == key:
+                    bruInt = int(value)
+                    if not 0 <= bruInt < 18:
+                        return False
+                elif 'color' == key:
+                    r,g,b=map(int,value.split(','))
+                    if not (0 <= r < 256 and 0 <= g < 256 and 0 <= b < 256) :
+                        return False
+                elif 'hotkey' == key:
+                    if not (value.islower() or value.isnumeric()) or len(value) != 1:
+                        return False
+                elif 'inserter' == key:
+                    if value not in inserterValue:
+                        return False
+                    temp_insert = value
+                elif 'item' == key:
+                    if value not in itemValue:
+                        return False
+                    temp_item = value
+            if not temp_insert.startswith(temp_item):
+                return False
+    except:
+        return False
+    return True
 
 def get_merged_pictures(pictures_path, key_word='merge', extension=None):
     """

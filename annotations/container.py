@@ -148,6 +148,7 @@ class AnnotationContainer:
             fullpath = filename
         return fullpath
 
+    # 加载图片
     def loadImage(self, filename):
         """
         Load and return the image referenced to by the filename.  In the
@@ -156,11 +157,14 @@ class AnnotationContainer:
         """
         fullpath = self._fullpath(filename)
         if not os.path.exists(fullpath):
-            LOG.warn("Image file %s does not exist." % fullpath)
+            LOG.warning("Image file %s does not exist." % fullpath)
             return None
 
         if _use_pil:
+            # 用pillow打开图片
             im = Image.open(fullpath)
+            if 'RGBA' == im.mode:
+                im = im.convert('RGB')
             return np.asarray(im)
         else:
             return okapy.loadImage(fullpath)

@@ -3,7 +3,7 @@
 import os
 block_cipher = None
 
-anaconda_sloth=r'D:\Anaconda3\Lib\site-packages\sloth'
+anaconda_sloth=os.path.abspath('..')
 a = Analysis(['sloth'],
              pathex=[os.path.join(anaconda_sloth,'bin')],
              binaries=[(os.path.join(anaconda_sloth,'api-ms-win-downlevel-shlwapi-l1-1-0.dll'), '.'),
@@ -31,7 +31,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=True )
+          console=False )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

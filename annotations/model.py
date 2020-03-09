@@ -793,22 +793,33 @@ class AnnotationSortFilterProxyModel(QSortFilterProxyModel):
 class AnnotationTreeView(QTreeView):
     selectedItemsChanged = pyqtSignal(object)
 
-    # 通过labeltool来设置右键打开图片所在文件夹
-    def set_openDirectory(self, openDirectory,removeFunction):
-        self.contextMenu = QtGui.QMenu(self)
-        self.actionA = self.contextMenu.addAction('打开文件所在文件夹')
-        self.actionA.triggered.connect(openDirectory)
-        self.actionB=self.contextMenu.addAction('删除')
-        self.actionB.triggered.connect(removeFunction)
+    def set_openDirectory(self, open_directory, remove_directory, split_rectangle):
+        """
+        通过labeltool来设置右键的函数
+        :param open_directory: 打开图片所在文件夹的函数
+        :param remove_directory: 删除文件夹的函数
+        :param split_rectangle: 矩形n等分的函数
+        """
+        self.open_directory_action.triggered.connect(open_directory)
+        self.remove_directory_action.triggered.connect(remove_directory)
+        self.split_rectangle_action.triggered.connect(split_rectangle)
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.showContextMenu)
 
-    # 设置右键菜单所在位置
     def showContextMenu(self):
+        """
+        设置右键菜单所在位置
+        """
         self.contextMenu.exec_(QCursor.pos())
 
     def __init__(self, parent=None):
         super(AnnotationTreeView, self).__init__(parent)
+        # 添加菜单
+        self.contextMenu = QtGui.QMenu(self)
+        # 添加菜单的动作
+        self.open_directory_action = self.contextMenu.addAction('打开文件所在文件夹')
+        self.remove_directory_action = self.contextMenu.addAction('删除')
+        self.split_rectangle_action = self.contextMenu.addAction('分裂')
 
         self.setUniformRowHeights(True)
         self.setSelectionMode(QTreeView.ExtendedSelection)
@@ -1041,7 +1052,7 @@ class InterpolateRange(QObject):
                         return False
 
                     test = frawVals[0]
-                    vtype = getStrNumType(test)
+                    vtype = self.getStrNumType(test)
                     if not vtype:
                         LOG.error("Error, unknown type in multi-value label field, neither int nor float, aborting")
                         return False

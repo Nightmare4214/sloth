@@ -3,7 +3,7 @@
         "attributes": {
             "class": "Face"
         },
-        "brush": "1",
+        "brush": "0",
         "color": "255,0,0",
         "hotkey": "f",
         "inserter": "sloth.items.RectItemInserter",
@@ -14,7 +14,7 @@
         "attributes": {
             "class": "ÖÐÎÄ"
         },
-        "brush": "2",
+        "brush": "1",
         "color": "0,255,0",
         "hotkey": "f",
         "inserter": "sloth.items.RectItemInserter",
@@ -25,7 +25,7 @@
         "attributes": {
             "class": "rect"
         },
-        "brush": "3",
+        "brush": "2",
         "color": "0,0,255",
         "hotkey": "r",
         "inserter": "sloth.items.RectItemInserter",
@@ -36,7 +36,7 @@
         "attributes": {
             "class": "yiwu"
         },
-        "brush": "4",
+        "brush": "3",
         "color": "255,0,255",
         "hotkey": "p",
         "inserter": "sloth.items.PointItemInserter",
@@ -47,7 +47,7 @@
         "attributes": {
             "class": "polygon"
         },
-        "brush": "5",
+        "brush": "4",
         "color": "0,255,255",
         "hotkey": "o",
         "inserter": "sloth.items.PolygonItemInserter",
